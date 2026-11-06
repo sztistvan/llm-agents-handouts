@@ -186,5 +186,5 @@ def run_agent(goal, tools, system="You are a helpful assistant.", max_steps=8):
 3. Make `extract_task` use `response_format` JSON schema; test on LM Studio and Azure.
 4. Log each step as a JSON line (timestamp, tool, args, duration).
 
-**Next:** Module 3: Patterns (coming next)
+**Next:** [Module 3: Patterns](03-patterns.md)
 

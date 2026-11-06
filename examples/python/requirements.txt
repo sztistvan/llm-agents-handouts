@@ -1,3 +1,6 @@
+# Modules 1-4: framework-agnostic examples (OpenAI-compatible API: LM Studio or Azure)
 openai>=1.40
-langgraph
-langchain-openai
+
+# LangGraph examples (Module 6)
+langgraph>=0.2
+langchain-openai>=0.2
