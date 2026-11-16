@@ -1,3 +1,4 @@
+import { pathToFileURL } from "node:url";
 import { chat } from "./llm_client.mjs";
 
 // Swarm-style handoff: agents are peers; a special tool transfers control.
@@ -19,22 +20,30 @@ const handoffTools = (names) => names.map((n) => ({
   },
 }));
 
+// maxHops = maximum number of handoffs; the agent reached after the last one still gets to answer.
+// Only the user's message travels with a handoff (a trimmed history); tool calls stay local.
 export async function runSwarm(userText, start = "triage", maxHops = 4) {
   let active = start;
+  let hops = 0;
   const history = [{ role: "user", content: userText }];
-  for (let hop = 0; hop <= maxHops; hop++) {
+  for (;;) {
     const agent = AGENTS[active];
     const messages = [{ role: "system", content: agent.system }, ...history];
     const tools = handoffTools(agent.handoffs);
     const msg = await chat(messages, { temperature: 0.2, ...(tools.length ? { tools } : {}) });
     const target = msg.tool_calls?.[0]?.function.name.replace("transfer_to_", "");
     if (target && AGENTS[target]) {
+      if (++hops > maxHops) return "Stopped: hop limit reached.";
       active = target;
       continue;
     }
+    if (!msg.content?.trim()) {
+      return `[${active}] (no answer and no valid handoff)`;
+    }
     return `[${active}] ${msg.content}`;
   }
-  return "Stopped: hop limit reached.";
 }
 
-console.log(await runSwarm("I was charged twice for my subscription."));
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  console.log(await runSwarm("I was charged twice for my subscription."));
+}

@@ -1,0 +1,2 @@
+# Keep LF line endings in the repository and in working copies (avoids CRLF warnings on Windows).
+* text=auto eol=lf

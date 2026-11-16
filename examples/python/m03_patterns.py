@@ -26,7 +26,7 @@ def ask_json(prompt: str, retries: int = 3) -> dict:
 
 def chain(topic: str) -> str:
     outline = ask(f"Write a 3-bullet outline for a short article about {topic}.")
-    if outline.count("\n") < 2:  # gate
+    if len([ln for ln in outline.splitlines() if ln.strip()]) < 3:  # gate: expect 3 non-empty lines
         raise ValueError("Outline too short")
     return ask(f"Write a 100-word article from this outline:\n{outline}")
 
@@ -45,7 +45,8 @@ def route(text: str) -> str:
 def vote(question: str, n: int = 3) -> str:
     with ThreadPoolExecutor(max_workers=n) as pool:
         answers = list(pool.map(lambda _: ask(question + " Answer in one word.", temperature=0.8), range(n)))
-    return max(set(answers), key=answers.count)
+    normalized = [a.lower().strip(" .!\n") for a in answers]  # "Canberra." == "canberra"
+    return max(set(normalized), key=normalized.count)
 
 
 def orchestrate(goal: str) -> str:

@@ -92,7 +92,7 @@ loop:
     return reply.text
 ```
 
-This is the idea behind OpenAI Swarm and the OpenAI Agents SDK "handoffs". Add a hop limit to avoid ping-pong loops.
+This is the idea behind OpenAI Swarm and the OpenAI Agents SDK "handoffs". Add a hop limit to avoid ping-pong loops. Runnable (JavaScript): [`examples/js/m04_handoff.mjs`](../examples/js/m04_handoff.mjs), run with `node examples/js/m04_handoff.mjs`.
 
 ## 6. Pipeline (sequential roles)
 
@@ -135,18 +135,18 @@ Practical rules:
 
 ## 9. Example: supervisor with workers as tools
 
-[`examples/python/m04_supervisor.py`](../examples/python/m04_supervisor.py) builds two specialist agents (a "calculator" and a "writer") and a supervisor that calls them as tools. The core idea:
+[`examples/python/m04_supervisor.py`](../examples/python/m04_supervisor.py) builds two specialist agents (a "calculator" and a "writer") and a supervisor that calls them as tools (run: `python examples/python/m04_supervisor.py`, Python only). The core idea:
 
 ```python
-def make_worker_tool(name, system, tools):
+def make_worker_tool(name, description, system, tools):
     def worker(task: str) -> str:
         return run_agent(task, tools, system=system, max_steps=5)   # from Module 2
     worker.__name__ = name
-    return Tool(worker, f"Delegate to the {name} specialist.", TASK_SCHEMA)
+    return Tool(worker, description, TASK_SCHEMA)
 
-supervisor_tools = [make_worker_tool("calculator", "...", math_tools),
-                    make_worker_tool("writer", "...", [])]
-run_agent(goal, supervisor_tools, system="Delegate; do not solve yourself.")
+calculator = make_worker_tool("calculator", "Specialist for arithmetic.", "...", MATH_TOOLS)
+writer = make_worker_tool("writer", "Specialist for writing short text from given facts.", "...", [])
+run_agent(goal, [calculator, writer], system="Delegate; do not solve yourself.")
 ```
 
 ## Small local model notes
@@ -164,7 +164,7 @@ run_agent(goal, supervisor_tools, system="Delegate; do not solve yourself.")
 ## Exercises
 
 1. Run the supervisor example, then add a third worker (e.g. `translator`). Does routing still work?
-2. Implement a handoff between `triage`, `billing` and `support` agents with a maximum of 4 hops.
+2. Implement a handoff between `triage`, `billing` and `support` agents with a maximum of 4 hops (`examples/js/m04_handoff.mjs` is a starting point).
 3. Build a proposer/critic pair for code review comments with at most 2 rounds.
 4. Measure LLM calls and total tokens for the same task as single agent vs. supervisor.
 

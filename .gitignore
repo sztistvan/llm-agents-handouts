@@ -1,4 +1,21 @@
-# Environment files
+#ignore data and charts
+/data
+/charts
+/charts_old
+
+# secrets
 .env
-.env.local
-.env.*.local
+
+# backup folder
+/backup
+
+/reports
+/reports_old
+
+__pycache__/
+*.pyc
+/examples/chat_memory.json
+
+# local environments and dependencies
+.venv/
+node_modules/

@@ -24,7 +24,7 @@ A chat completion takes a list of **messages** (roles: `system`, `user`, `assist
 | `max_tokens` | Output cap | Set it; prevents runaway replies |
 | `tools` | Callable function schemas | Keep few and well described |
 | `response_format` | JSON / schema-constrained output | Use when you need parseable data |
-| `stop` | Stop sequences | Useful for text-based ReAct parsing |
+| `stop` | Stop sequences | Useful for text-based ReAct parsing, but not every model accepts it (Azure gpt-5 models return a 400): cutting the text in code is the portable way |
 
 ## 2. Prompts
 
@@ -100,7 +100,7 @@ for attempt in 1..3:
 raise "could not get valid output"
 ```
 
-Runnable example: [`examples/python/m02_structured_output.py`](../examples/python/m02_structured_output.py).
+Runnable example (Python only): [`examples/python/m02_structured_output.py`](../examples/python/m02_structured_output.py), run with `python examples/python/m02_structured_output.py`.
 
 ## 5. Memory and context
 
@@ -144,6 +144,8 @@ Module 1 hard-coded one tool. These examples add a tool registry, error feedback
 - Python: [`examples/python/m02_agent_loop.py`](../examples/python/m02_agent_loop.py)
 - JavaScript: [`examples/js/m02_agent_loop.mjs`](../examples/js/m02_agent_loop.mjs)
 
+Run from the project root: `python examples/python/m02_agent_loop.py` or `node examples/js/m02_agent_loop.mjs`.
+
 Core of the Python version:
 
 ```python
@@ -159,8 +161,11 @@ def run_agent(goal, tools, system="You are a helpful assistant.", max_steps=8):
         if not msg.tool_calls:
             return msg.content
         for call in msg.tool_calls:
+            name = call.function.name
             try:
-                result = str(registry[call.function.name].fn(**json.loads(call.function.arguments)))
+                if name not in registry:
+                    raise ValueError(f"unknown tool '{name}'")
+                result = str(registry[name].fn(**json.loads(call.function.arguments)))
             except Exception as exc:
                 result = f"Error: {exc}"
             messages.append({"role": "tool", "tool_call_id": call.id, "content": result[:2000]})

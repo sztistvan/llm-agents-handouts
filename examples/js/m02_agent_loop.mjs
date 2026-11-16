@@ -1,3 +1,4 @@
+import { pathToFileURL } from "node:url";
 import { chat } from "./llm_client.mjs";
 
 const MAX_TOOL_OUTPUT = 2000;
@@ -33,4 +34,6 @@ const tools = [
     parameters: { type: "object", properties: { text: { type: "string" } }, required: ["text"] } },
 ];
 
-console.log(await runAgent("How many words are in 'the quick brown fox', plus 10?", tools));
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  console.log(await runAgent("How many words are in 'the quick brown fox'? Then add 10 to that count.", tools));
+}

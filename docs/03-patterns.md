@@ -27,7 +27,7 @@ flowchart LR
 | Plan-and-execute | Plan first, then run steps | Long tasks needing structure | Stale plans |
 | Reflection | Agent critiques own output | Quality matters | Extra latency |
 
-All examples below use `chat()` from `llm_client` (see `examples/python/m03_patterns.py` for runnable versions).
+All examples below use `chat()` from `llm_client` (see [`examples/python/m03_patterns.py`](../examples/python/m03_patterns.py) for runnable versions of chaining, routing, voting, orchestrator-workers and evaluator-optimizer; text-based ReAct is in [`examples/js/m03_react_text.mjs`](../examples/js/m03_react_text.mjs)). Run from the project root, e.g. `python examples/python/m03_patterns.py` (about 15 model calls: slow on a local model) or `node examples/js/m03_react_text.mjs`. Plan-and-execute and reflection are pseudocode only; they are exercises.
 
 ## 1. Prompt chaining
 
@@ -146,7 +146,7 @@ Thought: I can answer now.
 Final Answer: It is 14C and cloudy.
 ```
 
-Implement by using `stop=["Observation:"]`, parsing the `Action:` line, running the tool, and appending the observation. This works with weak local models, but parse defensively.
+Implement by cutting the reply at `Observation:` (the model must not invent observations), parsing the `Action:` line, running the tool, and appending the real observation. Runnable: [`examples/js/m03_react_text.mjs`](../examples/js/m03_react_text.mjs). You can also pass `stop=["Observation:"]` to the API, but some models (e.g. Azure gpt-5 family) reject that parameter, so cutting in code is the portable way. This works with weak local models, but parse defensively.
 
 ## 7. Plan-and-execute
 
@@ -219,7 +219,7 @@ flowchart TD
 1. Build a chain: summarize a text, extract 3 action items, then draft an email.
 2. Build a router with three categories and a safe default; test with ambiguous input.
 3. Implement evaluator-optimizer for "write a haiku with exactly 17 syllables" using a code check instead of an LLM judge.
-4. Implement text-based ReAct with `stop=["Observation:"]` and run it on a local model.
+4. Extend the text-based ReAct example with a second tool and run it on a local model.
 5. Compare plan-and-execute vs. ReAct on a multi-step task: count LLM calls and tokens.
 
 **Next:** [Module 4: Multi-agent structures](04-multi-agent.md)

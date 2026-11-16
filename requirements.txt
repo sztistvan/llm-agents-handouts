@@ -1,2 +1,3 @@
-# Python examples use an OpenAI-compatible API (LM Studio or Azure OpenAI).
+# Python examples use an OpenAI-compatible API (Azure OpenAI, OpenRouter or LM Studio).
+# The JavaScript examples need no packages (Node.js 20.12+).
 openai>=1.40

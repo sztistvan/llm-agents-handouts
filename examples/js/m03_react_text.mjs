@@ -1,7 +1,5 @@
+import { pathToFileURL } from "node:url";
 import { chat } from "./llm_client.mjs";
-
-const ask = async (prompt, system = "You are a concise assistant.", temperature = 0.2) =>
-  ((await chat([{ role: "system", content: system }, { role: "user", content: prompt }], { temperature })).content ?? "").trim();
 
 // ReAct with plain text: works for models without native tool calling.
 const tools = {
@@ -18,7 +16,10 @@ Tools: get_weather(city)`;
 export async function reactText(question, maxSteps = 5) {
   const messages = [{ role: "system", content: SYSTEM }, { role: "user", content: question }];
   for (let i = 0; i < maxSteps; i++) {
-    const text = ((await chat(messages, { temperature: 0, stop: ["Observation:"] })).content ?? "").trim();
+    // Not using the `stop` parameter: some models (e.g. Azure gpt-5 family) reject it.
+    // Instead cut the reply at "Observation:" ourselves, in case the model invents one.
+    const raw = (await chat(messages, { temperature: 0 })).content ?? "";
+    const text = raw.split("Observation:")[0].trim();
     messages.push({ role: "assistant", content: text });
     const final = text.match(/Final Answer:\s*([\s\S]*)/);
     if (final) return final[1].trim();
@@ -31,4 +32,6 @@ export async function reactText(question, maxSteps = 5) {
   return "Stopped: step limit reached.";
 }
 
-console.log(await reactText("What is the weather in Paris?"));
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  console.log(await reactText("What is the weather in Paris?"));
+}

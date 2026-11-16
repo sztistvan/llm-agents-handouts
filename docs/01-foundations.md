@@ -55,8 +55,8 @@ timeline
     2013-2016 : Deep RL agents (Atari, AlphaGo)
     2017 : Transformer architecture
     2020-2022 : GPT-3, instruction tuning, chain-of-thought
-    2022 : ReAct (reasoning + acting), Toolformer
-    2023 : Function calling APIs, AutoGPT, LangChain agents
+    2022 : ReAct (reasoning + acting)
+    2023 : Toolformer, function calling APIs, AutoGPT, LangChain agents
     2024 : Agent frameworks (LangGraph, AutoGen, CrewAI), MCP
     2025+ : Agent SDKs, computer use, long-running agents
 ```
@@ -107,7 +107,7 @@ Always cap the number of steps; otherwise a confused model can loop forever and 
 
 ## 6. Hands-on: your first agent
 
-Set up the backend (see `.env.example`), then run the minimal agent. The tool-calling loop below is ~40 lines with no framework.
+Set up the backend (README "Quick start" and `.env.example`), then run the minimal agent from the project root: `python examples/python/m01_minimal_agent.py` or `node examples/js/m01_minimal_agent.mjs`. Both import the shared client ([`llm_client.py`](../examples/python/llm_client.py), [`llm_client.mjs`](../examples/js/llm_client.mjs)) automatically. The tool-calling loop below is ~40 lines with no framework.
 
 ### Python (`examples/python/m01_minimal_agent.py`)
 
@@ -146,8 +146,11 @@ def run_agent(goal: str, max_steps: int = 5) -> str:
         if not msg.tool_calls:
             return msg.content
         for call in msg.tool_calls:
-            args = json.loads(call.function.arguments)
-            result = REGISTRY[call.function.name](**args)
+            try:
+                args = json.loads(call.function.arguments)
+                result = REGISTRY[call.function.name](**args)
+            except Exception as exc:  # feed errors back so the model can retry
+                result = f"Error: {exc}"
             messages.append({"role": "tool", "tool_call_id": call.id, "content": result})
     raise RuntimeError("Step limit reached")
 
@@ -182,8 +185,13 @@ async function runAgent(goal, maxSteps = 5) {
     messages.push(msg);
     if (!msg.tool_calls?.length) return msg.content;
     for (const call of msg.tool_calls) {
-      const args = JSON.parse(call.function.arguments);
-      messages.push({ role: "tool", tool_call_id: call.id, content: registry[call.function.name](args) });
+      let result;
+      try {
+        result = registry[call.function.name](JSON.parse(call.function.arguments));
+      } catch (err) {
+        result = `Error: ${err.message}`; // feed errors back so the model can retry
+      }
+      messages.push({ role: "tool", tool_call_id: call.id, content: result });
     }
   }
   throw new Error("Step limit reached");
@@ -192,6 +200,8 @@ async function runAgent(goal, maxSteps = 5) {
 console.log(await runAgent("What time is it in Budapest?"));
 ```
 
+> **Reasoning models:** avoid "thinking" models (e.g. Qwen3.x) for these examples: they can spend the whole token budget thinking and return an empty answer, and are very slow locally. Load a non-reasoning, tool-capable instruct model. Variables are read from a `.env` file in the project root or from the environment.
+>
 > **Small local models:** tool calling depends on the model and its chat template. In LM Studio choose a model with tool-use support, keep tool descriptions short, use few tools (1-5), and expect occasional malformed arguments. Wrap `json.loads` in error handling and feed errors back to the model as a tool result so it can retry.
 
 ## 7. Key takeaways

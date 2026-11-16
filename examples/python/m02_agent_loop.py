@@ -53,4 +53,4 @@ TOOLS = [
 ]
 
 if __name__ == "__main__":
-    print(run_agent("How many words are in 'the quick brown fox', plus 10?", TOOLS))
+    print(run_agent("How many words are in 'the quick brown fox'? Then add 10 to that count.", TOOLS))
