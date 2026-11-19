@@ -80,6 +80,44 @@ def chat(messages: list[dict], **kwargs):
     return choice.message
 
 
+EMBED_BATCH = 64  # texts per embeddings request
+
+
+def embed_model() -> str | None:
+    """The embedding model of the current provider (<PROVIDER>_EMBED_MODEL), or None if not set."""
+    return os.environ.get(f"{get_provider().upper()}_EMBED_MODEL") or None
+
+
+def has_embeddings() -> bool:
+    return embed_model() is not None
+
+
+def embed(texts: list[str], kind: str = "document") -> list[list[float]]:
+    """Turn texts into embedding vectors with the provider's embedding model.
+
+    kind: 'document' (text to be searched) or 'query' (the search question). Some models need a
+    different prefix for each (e.g. nomic-embed: 'search_document: ' / 'search_query: '); they are added
+    automatically for nomic models and can be set for any model with <PROVIDER>_EMBED_DOC_PREFIX and
+    <PROVIDER>_EMBED_QUERY_PREFIX. Always check the model card.
+    """
+    provider = get_provider()
+    model = embed_model()
+    if model is None:
+        raise RuntimeError(
+            f"Missing {provider.upper()}_EMBED_MODEL (LLM_PROVIDER={provider}). Add it to .env, see .env.example. "
+            "Without an embedding model only keyword search (BM25) is available.")
+    prefix = os.environ.get(f"{provider.upper()}_EMBED_{'QUERY' if kind == 'query' else 'DOC'}_PREFIX")
+    if prefix is None:
+        prefix = ("search_query: " if kind == "query" else "search_document: ") if "nomic" in model.lower() else ""
+    client, _ = get_client()
+    vectors: list[list[float]] = []
+    for i in range(0, len(texts), EMBED_BATCH):
+        batch = [prefix + t for t in texts[i:i + EMBED_BATCH]]
+        response = client.embeddings.create(model=model, input=batch)
+        vectors += [d.embedding for d in sorted(response.data, key=lambda d: d.index)]
+    return vectors
+
+
 def trace_mode(default: str = "off") -> str:
     """Read LLM_TRACE: 'compact' (also 1/true/on), 'raw' (full JSON) or 'off'. `default` applies when unset."""
     value = os.environ.get("LLM_TRACE", default).strip().lower()

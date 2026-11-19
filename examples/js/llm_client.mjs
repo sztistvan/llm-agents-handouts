@@ -57,6 +57,50 @@ export async function chat(messages, extra = {}) {
   return choice.message;
 }
 
+const EMBED_BATCH = 64; // texts per embeddings request
+
+/** The embedding model of the current provider (<PROVIDER>_EMBED_MODEL), or null if not set. */
+export function embedModel() {
+  const provider = (process.env.LLM_PROVIDER ?? "azure").trim().toLowerCase();
+  return process.env[`${provider.toUpperCase()}_EMBED_MODEL`] || null;
+}
+
+export const hasEmbeddings = () => embedModel() !== null;
+
+/**
+ * Turn texts into embedding vectors with the provider's embedding model.
+ * kind: 'document' (text to be searched) or 'query' (the search question). Some models need a different
+ * prefix for each (e.g. nomic-embed: 'search_document: ' / 'search_query: '); they are added automatically
+ * for nomic models and can be set for any model with <PROVIDER>_EMBED_DOC_PREFIX / _EMBED_QUERY_PREFIX.
+ */
+export async function embed(texts, kind = "document") {
+  const { provider, baseUrl, apiKey } = getConfig();
+  const model = embedModel();
+  if (!model) {
+    throw new Error(`Missing ${provider.toUpperCase()}_EMBED_MODEL (LLM_PROVIDER=${provider}). Add it to .env, see .env.example. ` +
+      "Without an embedding model only keyword search (BM25) is available.");
+  }
+  let prefix = process.env[`${provider.toUpperCase()}_EMBED_${kind === "query" ? "QUERY" : "DOC"}_PREFIX`];
+  if (prefix === undefined) {
+    prefix = model.toLowerCase().includes("nomic") ? (kind === "query" ? "search_query: " : "search_document: ") : "";
+  }
+  const timeoutMs = Number(process.env.LLM_TIMEOUT ?? 300) * 1000;
+  const vectors = [];
+  for (let i = 0; i < texts.length; i += EMBED_BATCH) {
+    const input = texts.slice(i, i + EMBED_BATCH).map((t) => prefix + t);
+    const res = await fetch(`${baseUrl.replace(/\/$/, "")}/embeddings`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
+      body: JSON.stringify({ model, input }),
+      signal: AbortSignal.timeout(timeoutMs),
+    });
+    if (!res.ok) throw new Error(`Embeddings request failed: ${res.status} ${await res.text()}`);
+    const data = await res.json();
+    vectors.push(...data.data.sort((a, b) => a.index - b.index).map((d) => d.embedding));
+  }
+  return vectors;
+}
+
 /** Read LLM_TRACE: 'compact' (also 1/true/on), 'raw' (full JSON) or 'off'. `defaultMode` applies when unset. */
 export function traceMode(defaultMode = "off") {
   const value = (process.env.LLM_TRACE ?? defaultMode).trim().toLowerCase();

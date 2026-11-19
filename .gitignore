@@ -15,6 +15,7 @@
 __pycache__/
 *.pyc
 /examples/chat_memory.json
+/examples/.rag_index/
 
 # local environments and dependencies
 .venv/

@@ -37,6 +37,8 @@ a block of three settings named after it: `<PROVIDER>_BASE_URL`, `<PROVIDER>_API
 | `openrouter` | `https://openrouter.ai/api/v1` | your OpenRouter key | model slug |
 | `lmstudio` | `http://localhost:1234/v1` | any non-empty string | name shown at `http://localhost:1234/v1/models` |
 
+From Module 5 on, an embedding model is also needed: `<PROVIDER>_EMBED_MODEL` (for Azure the name of an embedding deployment such as `text-embedding-3-small`, for LM Studio for example `text-embedding-nomic-embed-text-v1.5`). Without it, only keyword search works. How to create the Azure deployment: [Module 5](docs/05-rag.md#setup-an-embedding-model).
+
 Any other OpenAI-compatible endpoint works the same way (e.g. `LLM_PROVIDER=ollama` with `OLLAMA_*` variables).
 Switch provider for one run without editing `.env` (real environment variables override `.env`):
 
@@ -73,10 +75,12 @@ The provider switch works the same way (`$env:LLM_PROVIDER = "lmstudio"` in Powe
 | 2 | Core building blocks | LLM call, prompts, tool calling, structured output, memory and context, the agent loop |
 | 3 | Patterns | ReAct, plan-and-execute, reflection, routing, prompt chaining, parallelization, orchestrator-workers, evaluator-optimizer |
 | 4 | Multi-agent structures | Supervisor, hierarchical, swarm/handoff, debate and critic |
-| 5 | RAG, memory & tools *(planned)* | Retrieval, short/long-term memory, MCP |
-| 6 | Frameworks landscape *(planned)* | LangGraph, OpenAI Agents SDK, AutoGen, CrewAI, Semantic Kernel; when to use none |
-| 7 | Best practices *(planned)* | Simplicity, guardrails, evaluation, observability, cost/latency, security (prompt injection), human-in-the-loop |
-| 8 | Capstone examples *(planned)* | Research assistant; coding/file helper |
+| 5 | RAG *(in progress)* | Embeddings, chunking, hybrid search, reranking, evaluating recall, agentic RAG; then knowledge bases (updates, versions, scale) and GraphRAG |
+| 6 | Memory *(planned)* | Short-term (trimming, summaries), long-term (remember/recall), knowledge-graph memory; production issues |
+| 7 | Tools & MCP *(planned)* | Scaling tool sets, the Model Context Protocol (a tiny server and client), security |
+| 8 | Frameworks landscape *(planned)* | LangGraph, OpenAI Agents SDK, AutoGen, CrewAI, Semantic Kernel; when to use none |
+| 9 | Best practices *(planned)* | Simplicity, guardrails, evaluation, observability, cost/latency, security (prompt injection), human-in-the-loop |
+| 10 | Capstone examples *(planned)* | Research assistant; coding/file helper |
 
 ## Layout
 
@@ -85,10 +89,12 @@ docs/                 handouts, one per module (01-foundations.md, ...)
 diagrams/             Mermaid sources and shared diagrams (planned; diagrams currently live inside the handouts)
 examples/python/      framework-agnostic Python; shared building blocks + mNN_* lessons
 examples/js/          framework-agnostic JavaScript; same file names (.mjs)
-                      shared building blocks (no prefix): llm_client (talk to the model),
-                      agent (the agent loop: Tool, run_agent / runAgent)
+                      shared building blocks (no prefix): llm_client (talk to the model, embeddings),
+                      agent (the agent loop: Tool, run_agent / runAgent),
+                      retrieval (chunking, vector store, BM25, hybrid search), rag (cited answers, reranking)
                       lessons (mNN_ prefix): one runnable example per topic, run from the project root
-examples/langgraph/   LangGraph examples (planned, Module 6)
+examples/rag_golden.json   the golden question set of the retrieval evaluation (Module 5)
+examples/langgraph/   LangGraph examples (planned, Module 8)
 requirements.txt      Python dependencies (JavaScript needs none)
 .env.example          backend settings template: copy to .env
 ```
@@ -102,7 +108,8 @@ requirements.txt      Python dependencies (JavaScript needs none)
 - [x] Module 2: [Core building blocks](docs/02-building-blocks.md)
 - [x] Module 3: [Patterns](docs/03-patterns.md)
 - [x] Module 4: [Multi-agent structures](docs/04-multi-agent.md)
-- [ ] Modules 5-8
+- [ ] Module 5: [RAG](docs/05-rag.md) (basics done; knowledge bases and GraphRAG to come)
+- [ ] Modules 6-10
 
 ## Further reading and link check
 

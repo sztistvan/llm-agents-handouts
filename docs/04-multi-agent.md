@@ -177,4 +177,4 @@ run_agent(goal, [calculator, writer], system="Delegate; do not solve yourself.")
 - Guo et al., [*Large Language Model based Multi-Agents: A Survey of Progress and Challenges*](https://arxiv.org/abs/2402.01680) (2024)
 - LangChain, [*Multi-agent*](https://docs.langchain.com/oss/python/langchain/multi-agent): supervisor and handoff structures in code
 
-**Next:** [Module 5: RAG, memory & tools](05-rag-memory-tools.md) (coming next)
+**Next:** [Module 5: RAG](05-rag.md)
