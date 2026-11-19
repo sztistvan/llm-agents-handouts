@@ -1,7 +1,7 @@
 # LLM Agents: Handouts & Tutorials
 
 Short, practical handouts on building agents with large language models (LLMs).
-Written in English for developers who are new to agents.
+Written for developers who are new to agents.
 
 ## Principles
 
@@ -83,8 +83,11 @@ The provider switch works the same way (`$env:LLM_PROVIDER = "lmstudio"` in Powe
 ```
 docs/                 handouts, one per module (01-foundations.md, ...)
 diagrams/             Mermaid sources and shared diagrams (planned; diagrams currently live inside the handouts)
-examples/python/      framework-agnostic Python + shared llm_client
-examples/js/          framework-agnostic JavaScript + shared llm_client
+examples/python/      framework-agnostic Python; shared building blocks + mNN_* lessons
+examples/js/          framework-agnostic JavaScript; same file names (.mjs)
+                      shared building blocks (no prefix): llm_client (talk to the model),
+                      agent (the agent loop: Tool, run_agent / runAgent)
+                      lessons (mNN_ prefix): one runnable example per topic, run from the project root
 examples/langgraph/   LangGraph examples (planned, Module 6)
 requirements.txt      Python dependencies (JavaScript needs none)
 .env.example          backend settings template: copy to .env

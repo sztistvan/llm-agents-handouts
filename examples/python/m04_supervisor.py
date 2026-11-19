@@ -1,5 +1,5 @@
 """Supervisor pattern: specialist agents exposed as tools to a supervisor agent."""
-from m02_agent_loop import Tool, run_agent
+from agent import Tool, run_agent
 
 TASK_SCHEMA = {
     "type": "object",
@@ -24,8 +24,7 @@ def make_worker_tool(name: str, description: str, system: str, tools: list) -> T
     def worker(task: str) -> str:
         return run_agent(task, tools, system=system, max_steps=5)
 
-    worker.__name__ = name
-    return Tool(worker, description, TASK_SCHEMA)
+    return Tool(worker, description, TASK_SCHEMA, name=name)
 
 
 calculator = make_worker_tool(

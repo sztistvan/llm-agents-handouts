@@ -68,9 +68,18 @@ def evaluate_optimize(task: str, max_rounds: int = 3) -> str:
     return draft
 
 
+def reflect(task: str) -> str:
+    """Reflection: the SAME agent answers, critiques its own answer once, then revises.
+    Compared with evaluate_optimize: no separate judge, no ok/not-ok verdict, no loop."""
+    answer = ask(task)
+    critique = ask(f"Task: {task}\nAnswer: {answer}\nWhat is wrong or missing in this answer? Be specific and brief.")
+    return ask(f"{task}\nPrevious answer: {answer}\nFix these issues:\n{critique}")
+
+
 if __name__ == "__main__":
     print(chain("local LLMs"))
     print(route("My invoice shows the wrong amount."))
     print(vote("What is the capital of Australia?"))
     print(orchestrate("Plan a one-day team workshop on LLM agents"))
     print(evaluate_optimize("Write one sentence explaining what an LLM agent is."))
+    print(reflect("Explain in two sentences why the sky is blue."))

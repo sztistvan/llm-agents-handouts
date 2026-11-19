@@ -100,7 +100,7 @@ for attempt in 1..3:
 raise "could not get valid output"
 ```
 
-Runnable example (Python only): [`examples/python/m02_structured_output.py`](../examples/python/m02_structured_output.py), run with `python examples/python/m02_structured_output.py`.
+Runnable example: [`examples/python/m02_structured_output.py`](../examples/python/m02_structured_output.py) or [`examples/js/m02_structured_output.mjs`](../examples/js/m02_structured_output.mjs), run with `python examples/python/m02_structured_output.py` or `node examples/js/m02_structured_output.mjs`.
 
 ## 5. Memory and context
 
@@ -139,20 +139,45 @@ if tokens(messages) > BUDGET:
 
 ## 6. The agent loop, made reusable
 
-Module 1 hard-coded one tool. These examples add a tool registry, error feedback, a step limit, and trimmed tool output:
+Module 1 hard-coded one tool. The reusable loop adds a tool registry, error feedback, a step limit, trimmed tool output and an optional conversation history. It lives in a shared file, `agent`, that later modules import (the Module 4 supervisor uses it for every worker). The Module 2 lesson file only defines two demo tools and uses it:
 
-- Python: [`examples/python/m02_agent_loop.py`](../examples/python/m02_agent_loop.py)
-- JavaScript: [`examples/js/m02_agent_loop.mjs`](../examples/js/m02_agent_loop.mjs)
+| | Python | JavaScript |
+|---|---|---|
+| The loop (shared building block) | [`agent.py`](../examples/python/agent.py) | [`agent.mjs`](../examples/js/agent.mjs) |
+| The lesson: two demo tools and a run | [`m02_agent_loop.py`](../examples/python/m02_agent_loop.py) | [`m02_agent_loop.mjs`](../examples/js/m02_agent_loop.mjs) |
+
+The layers are: `llm_client` (talks to the model), then `agent` (the loop), then the `mNN_` lessons. Files without an `mNN_` prefix are reusable building blocks; files with one are runnable lessons.
 
 Run from the project root: `python examples/python/m02_agent_loop.py` or `node examples/js/m02_agent_loop.mjs`.
 
-Core of the Python version:
+To watch the loop, set the environment variable `LLM_TRACE=1` (one line per message) or `LLM_TRACE=raw` (full JSON). Unset, this example prints nothing. How to set it in PowerShell, bash or `.env`: see [Module 1, "Controlling the trace"](01-foundations.md#controlling-the-trace-llm_trace). For the goal "How many words are in 'the quick brown fox'? Then add 10 to that count." the model needs two tool calls in two steps, then answers (output shortened):
+
+```text
+[step 1] assistant -> TOOL CALL word_count({"text":"the quick brown fox"})  id=call_5GYSf…
+[step 1] tool      <- 4  (tool_call_id=call_5GYSf…)
+[step 2] assistant -> TOOL CALL add({"a":4,"b":10})  id=call_3Zr9l…
+[step 2] tool      <- 14  (tool_call_id=call_3Zr9l…)
+[step 3] assistant -> FINAL ANSWER (no tool_calls): There are **4** words in "the quick brown fox". Adding 10 gives **14**.
+```
+
+The second call uses `4`, the result of the first: the model reads earlier tool results from the message history. The loop stops at step 3 because that reply has no `tool_calls`. At the end, `messages` holds 7 entries: `system`, `user`, then `assistant` + `tool` twice, then the final `assistant` (the same growth as in Module 1, with one more round). More on reading these messages: [Module 1, "Reading the messages"](01-foundations.md#reading-the-messages-tool-calls-and-the-final-answer).
+
+Core of the Python version (`agent.py`, without the trace calls):
 
 ```python
-def run_agent(goal, tools, system="You are a helpful assistant.", max_steps=8):
+class Tool:
+    def __init__(self, fn, description, parameters, name=None):
+        self.fn, self.description, self.parameters = fn, description, parameters
+        self.name = name or fn.__name__          # the name the model sees
+
+def run_agent(goal, tools, system="You are a helpful assistant.", max_steps=8, messages=None):
     client, model = get_client()
-    registry = {t.fn.__name__: t for t in tools}
-    messages = [{"role": "system", "content": system}, {"role": "user", "content": goal}]
+    registry = {t.name: t for t in tools}
+    if messages is None:
+        messages = []
+    if not messages:                             # new conversation: start with the system prompt
+        messages.append({"role": "system", "content": system})
+    messages.append({"role": "user", "content": goal})
     for _ in range(max_steps):
         msg = client.chat.completions.create(
             model=model, messages=messages, tools=[t.schema() for t in tools], temperature=0.2
@@ -172,10 +197,30 @@ def run_agent(goal, tools, system="You are a helpful assistant.", max_steps=8):
     return "Stopped: step limit reached."
 ```
 
+### Continuing a conversation (`messages=`)
+
+By default every call starts a fresh conversation. To continue one, pass the same list again:
+
+```python
+history = []                                                          # the conversation so far
+run_agent("My favorite number is 7. Add 3 to it.", TOOLS, messages=history)
+run_agent("What was my favorite number?", TOOLS, messages=history)   # -> "Your favorite number was 7."
+```
+
+```js
+const history = [];
+await runAgent("My favorite number is 7. Add 3 to it.", tools, { messages: history });
+await runAgent("What was my favorite number?", tools, { messages: history });
+```
+
+- The list is **extended in place**, and the system message is added only when the list is empty. After the two calls above it holds `system`, `user`, `assistant` (tool call), `tool`, `assistant`, `user`, `assistant`.
+- The model is stateless: it "remembers" the number only because the earlier messages are sent again. The history grows with every turn, so long conversations need the trimming and summarizing from section 5.
+- Module 5 (memory) builds on this: saving the list to a file and loading it later. In Python the `assistant` entries are SDK objects, so convert them with `msg.model_dump()` before saving them as JSON.
+
 ## 7. Streaming and observability (brief)
 
 - **Streaming** (`stream=True`) shows tokens as they arrive: better UX, same logic.
-- **Log every step** (messages, tool calls, results, latency, tokens). Debugging agents without traces is guesswork (see Module 7).
+- **Log every step** (messages, tool calls, results, latency, tokens). Debugging agents without traces is guesswork (see Module 7). The `LLM_TRACE` option of the examples is the first step; exercise 4 takes it further.
 
 ## 8. Key takeaways
 

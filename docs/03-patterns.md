@@ -12,8 +12,8 @@ flowchart LR
     C --> D[Orchestrator-workers]
     D --> E[Evaluator-optimizer]
     E --> F[Autonomous agent: ReAct, plan-and-execute]
-    style A fill:#e8f5e9
-    style F fill:#ffebee
+    style A fill:#334155
+    style F fill:#78350f
 ```
 
 | Pattern | Control flow | Use when | Main risk |
@@ -22,12 +22,12 @@ flowchart LR
 | Routing | Classifier then branch | Distinct input categories | Misclassification |
 | Parallelization | Fan-out / fan-in | Independent subtasks, or voting | Cost |
 | Orchestrator-workers | LLM plans subtasks dynamically | Subtasks unknown upfront | Complexity |
-| Evaluator-optimizer | Generate, critique, repeat | Clear quality criteria | Endless loops |
+| Evaluator-optimizer | A separate judge gives a verdict; loop until accepted | Clear quality criteria | Endless loops |
 | ReAct | LLM loop with tools | Open-ended, tool-heavy tasks | Cost, drift |
 | Plan-and-execute | Plan first, then run steps | Long tasks needing structure | Stale plans |
-| Reflection | Agent critiques own output | Quality matters | Extra latency |
+| Reflection | The same agent critiques itself once, then revises | Quality matters, no formal criteria | Extra latency |
 
-All examples below use `chat()` from `llm_client` (see [`examples/python/m03_patterns.py`](../examples/python/m03_patterns.py) for runnable versions of chaining, routing, voting, orchestrator-workers and evaluator-optimizer; text-based ReAct is in [`examples/js/m03_react_text.mjs`](../examples/js/m03_react_text.mjs)). Run from the project root, e.g. `python examples/python/m03_patterns.py` (about 15 model calls: slow on a local model) or `node examples/js/m03_react_text.mjs`. Plan-and-execute and reflection are pseudocode only; they are exercises.
+All examples below use `chat()` from `llm_client` (see [`examples/python/m03_patterns.py`](../examples/python/m03_patterns.py) and [`examples/js/m03_patterns.mjs`](../examples/js/m03_patterns.mjs) for runnable versions of chaining, routing, voting, orchestrator-workers, evaluator-optimizer and reflection; text-based ReAct is in [`examples/python/m03_react_text.py`](../examples/python/m03_react_text.py) and [`examples/js/m03_react_text.mjs`](../examples/js/m03_react_text.mjs)). Run from the project root, e.g. `python examples/python/m03_patterns.py` or `node examples/js/m03_patterns.mjs` (about 20 model calls: slow on a local model). Plan-and-execute is pseudocode only; it is an exercise.
 
 ## 1. Prompt chaining
 
@@ -123,6 +123,8 @@ for i in 1..MAX_ROUNDS:
 return draft
 ```
 
+Runnable: `evaluate_optimize` in [`examples/python/m03_patterns.py`](../examples/python/m03_patterns.py) and `evaluateOptimize` in [`examples/js/m03_patterns.mjs`](../examples/js/m03_patterns.mjs). The lighter cousin, where the same agent critiques itself without a verdict or a loop, is [section 8, Reflection](#8-reflection), which also compares the two.
+
 ## 6. ReAct (reason + act)
 
 The classic agent loop: **Thought -> Action -> Observation**, repeated. With function-calling APIs this is the loop from Modules 1-2; the "thought" is the model's reasoning before a tool call.
@@ -146,7 +148,7 @@ Thought: I can answer now.
 Final Answer: It is 14C and cloudy.
 ```
 
-Implement by cutting the reply at `Observation:` (the model must not invent observations), parsing the `Action:` line, running the tool, and appending the real observation. Runnable: [`examples/js/m03_react_text.mjs`](../examples/js/m03_react_text.mjs). You can also pass `stop=["Observation:"]` to the API, but some models (e.g. Azure gpt-5 family) reject that parameter, so cutting in code is the portable way. This works with weak local models, but parse defensively.
+Implement by cutting the reply at `Observation:` (the model must not invent observations), parsing the `Action:` line, running the tool, and appending the real observation. Runnable: [`examples/python/m03_react_text.py`](../examples/python/m03_react_text.py) or [`examples/js/m03_react_text.mjs`](../examples/js/m03_react_text.mjs). You can also pass `stop=["Observation:"]` to the API, but some models (e.g. Azure gpt-5 family) reject that parameter, so cutting in code is the portable way. This works with weak local models, but parse defensively.
 
 ## 7. Plan-and-execute
 
@@ -176,13 +178,31 @@ Benefits: fewer expensive reasoning calls, easier to inspect and show progress. 
 
 ## 8. Reflection
 
-The agent reviews its own result (or a tool error) and revises. It is evaluator-optimizer where generator and critic are the same agent, possibly with a different prompt.
+The agent reviews its own result (or a tool error) and revises it, **once**. It is the lightweight cousin of [evaluator-optimizer](#5-evaluator-optimizer-generate-and-critique): the same agent plays generator and critic, and there is no accept/reject verdict and no loop.
 
 ```text
 answer = agent(task)
 critique = llm("What is wrong or missing in this answer?\n" + answer)
 return agent(task + "\nFix these issues:\n" + critique)
 ```
+
+### Reflection vs. evaluator-optimizer
+
+Both are "generate, critique, improve". They differ in how formal the critique is:
+
+| | Evaluator-optimizer (section 5) | Reflection (this section) |
+|---|---|---|
+| Who judges | A separate evaluator call with its own prompt and criteria | The same agent critiques its own answer |
+| What the judge returns | A verdict your code can read: `{ok, feedback}` | Free-text critique |
+| Loop | Repeats until accepted or `MAX_ROUNDS` is reached | One pass: answer, critique, fix |
+| Stop condition | `ok` is true (or the round limit) | None: it simply revises once |
+| LLM calls | 2 at least, up to `1 + 2 * MAX_ROUNDS` | Always 3 |
+| Use when | You can state clear pass/fail criteria | You want a cheap quality boost without formal criteria |
+| Runnable | `evaluate_optimize` / `evaluateOptimize` | `reflect` (same file) |
+
+Rule of thumb: if a judge returns a verdict and your code loops until it is accepted, it is **evaluator-optimizer**. If the same agent critiques and fixes its own answer in one pass, it is **reflection**.
+
+They combine well. You can run a reflection step inside each round of an evaluator-optimizer loop, or replace the LLM judge with a concrete check (run the tests, validate the JSON), which is the strongest version of either pattern. Runnable: `reflect` in [`examples/python/m03_patterns.py`](../examples/python/m03_patterns.py) and [`examples/js/m03_patterns.mjs`](../examples/js/m03_patterns.mjs).
 
 Small models are weak self-critics; use concrete checks (run the tests, validate the JSON, check the sources) wherever possible rather than "does this look good?".
 
@@ -221,5 +241,6 @@ flowchart TD
 3. Implement evaluator-optimizer for "write a haiku with exactly 17 syllables" using a code check instead of an LLM judge.
 4. Extend the text-based ReAct example with a second tool and run it on a local model.
 5. Compare plan-and-execute vs. ReAct on a multi-step task: count LLM calls and tokens.
+6. Run `reflect()` and `evaluate_optimize()` on the same task and compare the number of LLM calls and the quality. Find a task where the evaluator catches something reflection misses.
 
 **Next:** [Module 4: Multi-agent structures](04-multi-agent.md)

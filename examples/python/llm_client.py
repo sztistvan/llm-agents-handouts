@@ -14,6 +14,7 @@ Switch provider for one run without editing .env:
 Use a non-reasoning, tool-capable model. Reasoning ("thinking") models may spend the
 whole token budget thinking and return an empty answer; chat() raises a clear error then.
 """
+import json
 import os
 from pathlib import Path
 
@@ -77,6 +78,44 @@ def chat(messages: list[dict], **kwargs):
             "Reasoning models do this; load a non-reasoning model or raise max_tokens."
         )
     return choice.message
+
+
+def trace_mode(default: str = "off") -> str:
+    """Read LLM_TRACE: 'compact' (also 1/true/on), 'raw' (full JSON) or 'off'. `default` applies when unset."""
+    value = os.environ.get("LLM_TRACE", default).strip().lower()
+    if value == "raw":
+        return "raw"
+    return "compact" if value in {"1", "true", "on", "yes", "compact"} else "off"
+
+
+def _short(text, limit: int = 100) -> str:
+    text = " ".join(str(text).split())
+    return text if len(text) <= limit else text[: limit - 1] + "…"
+
+
+def show(msg, step: int, mode: str) -> None:
+    """Print one message of the agent loop, to see tool calls and the final answer.
+
+    mode 'compact': one line per message; mode 'raw': the message as JSON; 'off': nothing.
+    `msg` is a model reply (SDK object) or a tool-result dict.
+    """
+    if mode == "off":
+        return
+    data = msg.model_dump(exclude_none=True) if hasattr(msg, "model_dump") else dict(msg)
+    data = {k: v for k, v in data.items() if v not in ([], {}, "")}  # drop empty noise (annotations, "")
+    if mode == "raw":
+        print(f"--- step {step}: {data.get('role')} message")
+        print(json.dumps(data, indent=2, ensure_ascii=False))
+        return
+    role = data.get("role")
+    if role == "assistant" and data.get("tool_calls"):
+        for call in data["tool_calls"]:
+            fn = call["function"]
+            print(f"[step {step}] assistant -> TOOL CALL {fn['name']}({fn['arguments']})  id={call['id']}")
+    elif role == "assistant":
+        print(f"[step {step}] assistant -> FINAL ANSWER (no tool_calls): {_short(data.get('content', ''))}")
+    elif role == "tool":
+        print(f"[step {step}] tool      <- {_short(data.get('content', ''))}  (tool_call_id={data.get('tool_call_id')})")
 
 
 if __name__ == "__main__":

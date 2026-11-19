@@ -57,6 +57,43 @@ export async function chat(messages, extra = {}) {
   return choice.message;
 }
 
+/** Read LLM_TRACE: 'compact' (also 1/true/on), 'raw' (full JSON) or 'off'. `defaultMode` applies when unset. */
+export function traceMode(defaultMode = "off") {
+  const value = (process.env.LLM_TRACE ?? defaultMode).trim().toLowerCase();
+  if (value === "raw") return "raw";
+  return ["1", "true", "on", "yes", "compact"].includes(value) ? "compact" : "off";
+}
+
+const short = (text, limit = 100) => {
+  const s = String(text).split(/\s+/).filter(Boolean).join(" ");
+  return s.length <= limit ? s : `${s.slice(0, limit - 1)}…`;
+};
+
+/**
+ * Print one message of the agent loop, to see tool calls and the final answer.
+ * mode 'compact': one line per message; 'raw': the message as JSON; 'off': nothing.
+ */
+export function show(msg, step, mode) {
+  if (mode === "off") return;
+  const empty = (v) => v == null || v === "" || (Array.isArray(v) && !v.length) ||
+    (typeof v === "object" && !Array.isArray(v) && !Object.keys(v).length);
+  const data = Object.fromEntries(Object.entries(msg).filter(([, v]) => !empty(v))); // drop empty noise
+  if (mode === "raw") {
+    console.log(`--- step ${step}: ${data.role} message`);
+    console.log(JSON.stringify(data, null, 2));
+    return;
+  }
+  if (data.role === "assistant" && data.tool_calls) {
+    for (const call of data.tool_calls) {
+      console.log(`[step ${step}] assistant -> TOOL CALL ${call.function.name}(${call.function.arguments})  id=${call.id}`);
+    }
+  } else if (data.role === "assistant") {
+    console.log(`[step ${step}] assistant -> FINAL ANSWER (no tool_calls): ${short(data.content ?? "")}`);
+  } else if (data.role === "tool") {
+    console.log(`[step ${step}] tool      <- ${short(data.content ?? "")}  (tool_call_id=${data.tool_call_id})`);
+  }
+}
+
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const reply = await chat([{ role: "user", content: "Say hello in five words." }]);
   console.log(reply.content);
