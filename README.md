@@ -97,9 +97,13 @@ requirements.txt      Python dependencies (JavaScript needs none)
 
 - [x] Scope agreed
 - [x] Folder scaffold
-- [x] Shared `llm_client` (Python, JS)
+- [x] Shared `llm_client` and `agent` (Python, JS)
 - [x] Module 1: [Foundations & history](docs/01-foundations.md)
 - [x] Module 2: [Core building blocks](docs/02-building-blocks.md)
 - [x] Module 3: [Patterns](docs/03-patterns.md)
 - [x] Module 4: [Multi-agent structures](docs/04-multi-agent.md)
 - [ ] Modules 5-8
+
+## License
+
+[MIT](LICENSE) © 2026 István Szatmári
