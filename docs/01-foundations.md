@@ -334,8 +334,14 @@ The same works for the JavaScript examples, for instance `node examples/js/m01_m
 
 ## Further reading
 
-- Yao et al., *ReAct: Synergizing Reasoning and Acting in Language Models* (2022)
-- Anthropic, *Building Effective Agents* (2024)
-- Russell & Norvig, *Artificial Intelligence: A Modern Approach* (agents chapter)
+- Yao et al., [*ReAct: Synergizing Reasoning and Acting in Language Models*](https://arxiv.org/abs/2210.03629) (2022): the Thought, Action, Observation template
+- Wei et al., [*Chain-of-Thought Prompting Elicits Reasoning in Large Language Models*](https://arxiv.org/abs/2201.11903) (2022)
+- Schick et al., [*Toolformer: Language Models Can Teach Themselves to Use Tools*](https://arxiv.org/abs/2302.04761) (2023)
+- Anthropic, [*Building effective AI agents*](https://www.anthropic.com/research/building-effective-agents) (2024): workflows vs. agents, and why to start simple
+- Lilian Weng, [*LLM Powered Autonomous Agents*](https://lilianweng.github.io/posts/2023-06-23-agent/) (2023): planning, memory and tool use in one overview
+- Chip Huyen, [*Agents*](https://huyenchip.com/2025/01/07/agents.html) (2025): tools, planning and failure modes
+- Wang et al., [*A Survey on Large Language Model based Autonomous Agents*](https://arxiv.org/abs/2308.11432) (2023): for a wider map of the field
+- Russell & Norvig, [*Artificial Intelligence: A Modern Approach*](https://aima.cs.berkeley.edu/) (4th ed., 2020): the classic definition of an agent
+- [Model Context Protocol](https://modelcontextprotocol.io/): the standard for sharing tools with agents (Module 5)
 
 **Next:** [Module 2: Core building blocks](02-building-blocks.md)

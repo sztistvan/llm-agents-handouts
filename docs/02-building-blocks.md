@@ -236,5 +236,16 @@ await runAgent("What was my favorite number?", tools, { messages: history });
 3. Make `extract_task` use `response_format` JSON schema; test on LM Studio and Azure.
 4. Log each step as a JSON line (timestamp, tool, args, duration).
 
+## Further reading
+
+- Anthropic, [*Writing effective tools for AI agents*](https://www.anthropic.com/research/writing-tools-for-agents) (2025): tool names, descriptions and outputs that models use well
+- Anthropic, [*Effective context engineering for AI agents*](https://www.anthropic.com/research/effective-context-engineering-for-ai-agents) (2025): what to keep in the context window, and what to trim or summarize
+- Liu et al., [*Lost in the Middle: How Language Models Use Long Contexts*](https://arxiv.org/abs/2307.03172) (2023): why a longer context is not always used well
+- Tool calling in your provider's docs: [OpenAI](https://developers.openai.com/api/docs/guides/function-calling), [Azure OpenAI](https://learn.microsoft.com/en-us/azure/foundry/openai/how-to/function-calling), [OpenRouter](https://openrouter.ai/docs/guides/features/tool-calling), [LM Studio](https://lmstudio.ai/docs/developer/openai-compat/tools)
+- OpenAI, [*Structured model outputs*](https://developers.openai.com/api/docs/guides/structured-outputs): JSON Schema output, and its limits
+- [JSON Schema reference](https://json-schema.org/understanding-json-schema/reference): the format of the tool `parameters`
+- Prompting guides: [OpenAI](https://developers.openai.com/api/docs/guides/prompt-engineering) and [Anthropic](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/overview)
+- [Pydantic serialization](https://pydantic.dev/docs/validation/latest/concepts/serialization/): `model_dump`, used by the Python trace helper, and the [`openai-python`](https://github.com/openai/openai-python) SDK source
+
 **Next:** [Module 3: Patterns](03-patterns.md)
 

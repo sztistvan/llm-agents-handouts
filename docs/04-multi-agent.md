@@ -167,4 +167,14 @@ run_agent(goal, [calculator, writer], system="Delegate; do not solve yourself.")
 3. Build a proposer/critic pair for code review comments with at most 2 rounds.
 4. Measure LLM calls and total tokens for the same task as single agent vs. supervisor.
 
+## Further reading
+
+- Anthropic, [*How we built our multi-agent research system*](https://www.anthropic.com/research/multi-agent-research-system) (2025): an orchestrator with parallel workers in production, with the lessons learned
+- Cognition, [*Don't Build Multi-Agents*](https://cognition.com/blog/dont-build-multi-agents) (2025): the counterpoint, on why splitting context across agents can hurt
+- OpenAI Agents SDK, [*Handoffs*](https://openai.github.io/openai-agents-python/handoffs/) and [*Agent orchestration*](https://openai.github.io/openai-agents-python/multi_agent/); the OpenAI Cookbook's [*Orchestrating Agents: Routines and Handoffs*](https://developers.openai.com/cookbook/examples/orchestrating_agents) and the original educational [`openai/swarm`](https://github.com/openai/swarm) repo
+- Wu et al., [*AutoGen: Enabling Next-Gen LLM Applications via Multi-Agent Conversation*](https://arxiv.org/abs/2308.08155) (2023)
+- Du et al., [*Improving Factuality and Reasoning in Language Models through Multiagent Debate*](https://arxiv.org/abs/2305.14325) (2023)
+- Guo et al., [*Large Language Model based Multi-Agents: A Survey of Progress and Challenges*](https://arxiv.org/abs/2402.01680) (2024)
+- LangChain, [*Multi-agent*](https://docs.langchain.com/oss/python/langchain/multi-agent): supervisor and handoff structures in code
+
 **Next:** [Module 5: RAG, memory & tools](05-rag-memory-tools.md) (coming next)

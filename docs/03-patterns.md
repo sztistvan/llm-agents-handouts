@@ -243,4 +243,14 @@ flowchart TD
 5. Compare plan-and-execute vs. ReAct on a multi-step task: count LLM calls and tokens.
 6. Run `reflect()` and `evaluate_optimize()` on the same task and compare the number of LLM calls and the quality. Find a task where the evaluator catches something reflection misses.
 
+## Further reading
+
+- Anthropic, [*Building effective AI agents*](https://www.anthropic.com/research/building-effective-agents) (2024): the workflow patterns of sections 1 to 5 (chaining, routing, parallelization, orchestrator-workers, evaluator-optimizer)
+- Yao et al., [*ReAct: Synergizing Reasoning and Acting in Language Models*](https://arxiv.org/abs/2210.03629) (2022)
+- Wang et al., [*Plan-and-Solve Prompting*](https://arxiv.org/abs/2305.04091) (2023): plan first, then execute
+- Shinn et al., [*Reflexion: Language Agents with Verbal Reinforcement Learning*](https://arxiv.org/abs/2303.11366) (2023): reflection with memory across attempts
+- Madaan et al., [*Self-Refine: Iterative Refinement with Self-Feedback*](https://arxiv.org/abs/2303.17651) (2023): the same model generates, critiques and revises
+- Wang et al., [*Self-Consistency Improves Chain of Thought Reasoning*](https://arxiv.org/abs/2203.11171) (2022): voting over several answers
+- LangChain, [*Workflows and agents*](https://docs.langchain.com/oss/python/langgraph/workflows-agents): the same patterns as LangGraph code (a preview of Module 6)
+
 **Next:** [Module 4: Multi-agent structures](04-multi-agent.md)

@@ -104,6 +104,14 @@ requirements.txt      Python dependencies (JavaScript needs none)
 - [x] Module 4: [Multi-agent structures](docs/04-multi-agent.md)
 - [ ] Modules 5-8
 
+## Further reading and link check
+
+Each module ends with a *Further reading* list of papers, guides and documentation, all with links. Pages move, so if a link breaks, search by title. To re-check every external link (needs network and `curl`):
+
+```bash
+python tools/check_links.py
+```
+
 ## License
 
 [MIT](LICENSE) © 2026 István Szatmári
