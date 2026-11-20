@@ -54,7 +54,7 @@ async function mapLimit(items, limit, fn) {
 }
 
 /** Ask for JSON; on a bad reply, say so and ask again (the parse-validate-retry pattern of Module 2). */
-async function jsonReply(messages, retries = 3) {
+export async function jsonReply(messages, retries = 3) {
   const conversation = [...messages];
   for (let i = 0; i < retries; i++) {
     const raw = ((await chat(conversation, { temperature: 0 })).content ?? "").trim();
@@ -98,6 +98,33 @@ export async function extractChunk(chunk) {
   }
   return { chunk_id: chunk.id, doc_id: chunk.doc_id, section: chunk.section,
     entities: [...entities].map(([id, e]) => ({ id, ...e })), relations };
+}
+
+// Colours of the entity types in diagrams: a light fill with dark text, readable in light and dark themes.
+export const TYPE_STYLE = {
+  concept: ["#e0f2fe", "#0369a1"], pattern: ["#dcfce7", "#15803d"], component: ["#fef9c3", "#a16207"], tool: ["#fae8ff", "#a21caf"],
+  file: ["#f1f5f9", "#475569"], parameter: ["#ffedd5", "#c2410c"], provider: ["#e0e7ff", "#4338ca"], other: ["#fee2e2", "#b91c1c"],
+};
+
+/**
+ * Mermaid flowchart text for a graph. nodes: [id, label, kind]; edges: [source id, label, target id, style?] with the style
+ * 'solid', 'dashed' or 'thick'. Kinds are coloured with `styles` (default: TYPE_STYLE).
+ * Paste the result into a ```mermaid block (GitHub renders it) or into https://mermaid.live.
+ */
+export function mermaidDiagram(nodes, edges, direction = "LR", styles = TYPE_STYLE) {
+  const index = new Map(nodes.map(([id], i) => [id, `n${i}`]));
+  const clean = (text) => text.replaceAll('"', "'");
+  const lines = [`flowchart ${direction}`];
+  for (const kind of new Set(nodes.map(([, , k]) => k))) {
+    const [fill, stroke] = styles[kind] ?? styles.other ?? ["#f1f5f9", "#475569"];
+    lines.push(`    classDef ${kind} fill:${fill},stroke:${stroke},color:#0f172a`);
+  }
+  for (const [id, label, kind] of nodes) lines.push(`    ${index.get(id)}["${clean(label)}"]:::${kind}`);
+  for (const [source, label, target, style = "solid"] of edges) {
+    const arrow = { solid: `-- "${clean(label)}" -->`, dashed: `-. "${clean(label)}" .->`, thick: `== "${clean(label)}" ==>` }[style];
+    lines.push(`    ${index.get(source)} ${arrow} ${index.get(target)}`);
+  }
+  return lines.join("\n");
 }
 
 /** Graph facts as lines for a prompt: source --relation--> target [chunks it came from]. */
@@ -259,6 +286,66 @@ export class Graph {
       }
     }
     return pairs.sort((p, q) => cmp([-p[0], p[1], p[2]], [-q[0], q[1], q[2]])).slice(0, limit);
+  }
+
+  // ------------------------------------------------------------ pictures
+
+  /** Sizes of the connected parts of the graph, largest first (a graph that is one big part is well linked). */
+  components() {
+    this.#index();
+    const seen = new Set();
+    const sizes = [];
+    for (const start of [...this.nodes.keys()].sort()) {
+      if (seen.has(start)) continue;
+      const stack = [start];
+      let size = 0;
+      seen.add(start);
+      while (stack.length) {
+        const current = stack.pop();
+        size++;
+        for (const [neighbour] of this.adj.get(current)) if (!seen.has(neighbour)) { seen.add(neighbour); stack.push(neighbour); }
+      }
+      sizes.push(size);
+    }
+    return sizes.sort((a, b) => b - a);
+  }
+
+  /** The facts of one chunk, or the merge of a few chunks, as a diagram. With several chunks, facts from the first are
+   *  solid lines, from the second dashed, and facts found in more than one chunk are thick. */
+  mermaidChunks(chunkHashes, direction = "LR") {
+    this.#index();
+    const chosen = new Set(chunkHashes);
+    const kept = [];
+    for (const key of [...this.edges.keys()].sort()) {
+      const sources = this.edges.get(key).filter((h) => chosen.has(h));
+      if (sources.length) kept.push([key, sources.length > 1 ? "thick" : (chunkHashes.indexOf(sources[0]) === 1 ? "dashed" : "solid")]);
+    }
+    const ids = new Set(chunkHashes.flatMap((h) => this.chunkEntities.get(h) ?? []));
+    for (const [key] of kept) { const [source, , target] = key.split(SEP); ids.add(source); ids.add(target); }
+    const nodes = [...ids].sort().map((i) => [i, this.nodes.get(i).name, this.nodes.get(i).type]);
+    const edges = kept.map(([key, style]) => [...key.split(SEP), style]);
+    return mermaidDiagram(nodes, edges, direction);
+  }
+
+  /** The neighbourhood of one entity as a diagram: the best supported facts within `hops` steps. */
+  mermaidNeighbourhood(entityId, hops = 1, maxEdges = 30, direction = "LR") {
+    this.#index();
+    const distance = new Map([[entityId, 0]]);
+    let frontier = [entityId];
+    for (let level = 0; level < hops; level++) {
+      const following = [];
+      for (const current of frontier) for (const [neighbour] of this.adj.get(current)) {
+        if (!distance.has(neighbour)) { distance.set(neighbour, level + 1); following.push(neighbour); }
+      }
+      frontier = following;
+    }
+    const touches = (key) => { const [s, , t] = key.split(SEP); return s === entityId || t === entityId ? 0 : 1; };
+    const keys = [...this.edges.keys()].filter((k) => { const [s, , t] = k.split(SEP); return distance.has(s) && distance.has(t); })
+      .sort((a, b) => cmp([touches(a), -this.edges.get(a).length, a], [touches(b), -this.edges.get(b).length, b])).slice(0, maxEdges);
+    const ids = new Set([entityId]);
+    for (const k of keys) { const [s, , t] = k.split(SEP); ids.add(s); ids.add(t); }
+    const nodes = [...ids].sort().map((i) => [i, this.nodes.get(i).name, this.nodes.get(i).type]);
+    return mermaidDiagram(nodes, [...keys].sort().map((k) => k.split(SEP)), direction);
   }
 
   // ------------------------------------------------------------ local search

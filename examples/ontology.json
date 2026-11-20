@@ -1,0 +1,20 @@
+{
+  "classes": {
+    "Pattern": {"parent": null, "description": "a named way of structuring an LLM application or agent"},
+    "WorkflowPattern": {"parent": "Pattern", "description": "a flow fixed by code: prompt chaining, routing, parallelization, orchestrator-workers, evaluator-optimizer"},
+    "AgentPattern": {"parent": "Pattern", "description": "a loop in which the model decides: ReAct, plan-and-execute, reflection"},
+    "MultiAgentStructure": {"parent": "Pattern", "description": "how several agents cooperate: supervisor, hierarchical team, handoff, pipeline, debate"},
+    "Component": {"parent": null, "description": "a building block of an agent: the agent loop, a tool, memory, a router, an evaluator"},
+    "File": {"parent": null, "description": "a source file or document, for example m03_patterns.py"},
+    "Parameter": {"parent": null, "description": "a setting or a limit, for example max_steps or LLM_TRACE"},
+    "Concept": {"parent": null, "description": "any other important idea; use it only when no other class fits"}
+  },
+  "relations": {
+    "variant_of": {"domain": ["Pattern"], "range": ["Pattern"], "description": "A is a form or a variant of B"},
+    "builds_on": {"domain": ["Pattern", "Component"], "range": ["Pattern", "Component"], "description": "A is built on, or reuses, B"},
+    "contrasts_with": {"domain": ["Pattern"], "range": ["Pattern"], "description": "A is distinguished from B"},
+    "uses": {"domain": ["Pattern", "Component"], "range": ["Component", "Concept"], "description": "A needs B to work"},
+    "implemented_in": {"domain": ["Pattern", "Component"], "range": ["File"], "description": "A has runnable code in B"},
+    "limited_by": {"domain": ["Pattern", "Component"], "range": ["Parameter"], "description": "A is bounded by the setting B"}
+  }
+}

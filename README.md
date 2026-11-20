@@ -113,6 +113,7 @@ examples/js/          framework-agnostic JavaScript; same file names (.mjs)
                       lessons (mNN_ prefix): one runnable example per topic, run from the project root
 examples/rag_golden.json   the golden question set of the retrieval evaluation (Module 5)
 examples/graph_golden.json multi-hop questions for the GraphRAG comparison (Module 7)
+examples/ontology.json     a small ontology for the handouts: classes, taxonomy, relations with domain and range (Module 7)
 examples/langgraph/   LangGraph examples (planned, Module 11)
 requirements.txt      Python dependencies (JavaScript needs none)
 .env.example          backend settings template: copy to .env

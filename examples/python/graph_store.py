@@ -51,7 +51,7 @@ def graph_path() -> Path:
     return INDEX_DIR / ("graph-" + re.sub(r"[^A-Za-z0-9._-]+", "-", get_config()["model"]) + ".json")
 
 
-def _json_reply(messages: list[dict], retries: int = 3):
+def json_reply(messages: list[dict], retries: int = 3):
     """Ask for JSON; on a bad reply, say so and ask again (the parse-validate-retry pattern of Module 2)."""
     messages = list(messages)
     for _ in range(retries):
@@ -66,7 +66,7 @@ def _json_reply(messages: list[dict], retries: int = 3):
 
 def extract_chunk(chunk: dict) -> dict | None:
     """One LLM call: the entities and relations of one chunk, validated. None if the model never gave usable JSON."""
-    data = _json_reply([{"role": "system", "content": EXTRACT_SYSTEM},
+    data = json_reply([{"role": "system", "content": EXTRACT_SYSTEM},
                         {"role": "user", "content": f"Section: {chunk['section']}\n\nPassage:\n{chunk['text'][:3000]}"}])
     if not isinstance(data, dict):
         return None
@@ -90,6 +90,34 @@ def extract_chunk(chunk: dict) -> dict | None:
                 relations.append({"s": source_id, "r": relation, "t": target_id})
     return {"chunk_id": chunk["id"], "doc_id": chunk["doc_id"], "section": chunk["section"],
             "entities": [{"id": k, **v} for k, v in entities.items()], "relations": relations}
+
+
+# Colours of the entity types in diagrams: a light fill with dark text, readable in light and dark themes.
+TYPE_STYLE = {"concept": ("#e0f2fe", "#0369a1"), "pattern": ("#dcfce7", "#15803d"), "component": ("#fef9c3", "#a16207"),
+              "tool": ("#fae8ff", "#a21caf"), "file": ("#f1f5f9", "#475569"), "parameter": ("#ffedd5", "#c2410c"),
+              "provider": ("#e0e7ff", "#4338ca"), "other": ("#fee2e2", "#b91c1c")}
+
+
+def mermaid_diagram(nodes: list[tuple[str, str, str]], edges: list[tuple], direction: str = "LR",
+                    styles: dict[str, tuple[str, str]] | None = None) -> str:
+    """Mermaid flowchart text for a graph. nodes: (id, label, kind); edges: (source id, label, target id) with an
+    optional fourth item 'solid', 'dashed' or 'thick'. Kinds are coloured with `styles` (default: TYPE_STYLE).
+    Paste the result into a ```mermaid block (GitHub renders it) or into https://mermaid.live."""
+    styles = styles or TYPE_STYLE
+    index = {node_id: f"n{i}" for i, (node_id, _, _) in enumerate(nodes)}
+    clean = lambda text: text.replace('"', "'")
+    lines = [f"flowchart {direction}"]
+    for kind in dict.fromkeys(kind for _, _, kind in nodes):
+        fill, stroke = styles.get(kind, styles.get("other", ("#f1f5f9", "#475569")))
+        lines.append(f"    classDef {kind} fill:{fill},stroke:{stroke},color:#0f172a")
+    for node_id, label, kind in nodes:
+        lines.append(f'    {index[node_id]}["{clean(label)}"]:::{kind}')
+    for edge in edges:
+        source, label, target = edge[:3]
+        style = edge[3] if len(edge) > 3 else "solid"
+        arrow = {"solid": f'-- "{clean(label)}" -->', "dashed": f'-. "{clean(label)}" .->', "thick": f'== "{clean(label)}" ==>'}[style]
+        lines.append(f"    {index[source]} {arrow} {index[target]}")
+    return "\n".join(lines)
 
 
 def format_facts(facts: list[dict], limit: int = 30) -> str:
@@ -234,6 +262,65 @@ class Graph:
                     pairs.append((similarity, ids[a], ids[b]))
         return sorted(pairs, key=lambda p: (-p[0], p[1], p[2]))[:limit]
 
+    # ------------------------------------------------------------ pictures
+
+    def components(self) -> list[int]:
+        """Sizes of the connected parts of the graph, largest first (a graph that is one big part is well linked)."""
+        self._index()
+        seen, sizes = set(), []
+        for start in sorted(self.nodes):
+            if start in seen:
+                continue
+            stack, size = [start], 0
+            seen.add(start)
+            while stack:
+                current = stack.pop()
+                size += 1
+                for neighbour, _ in self.adj[current]:
+                    if neighbour not in seen:
+                        seen.add(neighbour)
+                        stack.append(neighbour)
+            sizes.append(size)
+        return sorted(sizes, reverse=True)
+
+    def mermaid_chunks(self, chunk_hashes: list[str], direction: str = "LR") -> str:
+        """The facts of one chunk, or the merge of a few chunks, as a diagram. With several chunks, facts from the
+        first are solid lines, from the second dashed, and facts found in more than one chunk are thick."""
+        self._index()
+        chosen = set(chunk_hashes)
+        kept = []
+        for key in sorted(self.edges):
+            sources = [h for h in self.edges[key] if h in chosen]
+            if sources:
+                style = "thick" if len(sources) > 1 else ("dashed" if chunk_hashes.index(sources[0]) == 1 else "solid")
+                kept.append((key, style))
+        ids = {e for h in chunk_hashes for e in self.chunk_entities.get(h, [])}
+        for key, _ in kept:
+            source, _, target = key.split(SEP)
+            ids.update((source, target))
+        nodes = [(i, self.nodes[i]["name"], self.nodes[i]["type"]) for i in sorted(ids)]
+        edges = [(key.split(SEP)[0], key.split(SEP)[1], key.split(SEP)[2], style) for key, style in kept]
+        return mermaid_diagram(nodes, edges, direction)
+
+    def mermaid_neighbourhood(self, entity_id: str, hops: int = 1, max_edges: int = 30, direction: str = "LR") -> str:
+        """The neighbourhood of one entity as a diagram: the best supported facts within `hops` steps."""
+        self._index()
+        distance, frontier = {entity_id: 0}, [entity_id]
+        for level in range(hops):
+            following = []
+            for current in frontier:
+                for neighbour, _ in self.adj[current]:
+                    if neighbour not in distance:
+                        distance[neighbour] = level + 1
+                        following.append(neighbour)
+            frontier = following
+        keys = [k for k in self.edges if k.split(SEP)[0] in distance and k.split(SEP)[2] in distance]
+        keys = sorted(keys, key=lambda k: (0 if entity_id in (k.split(SEP)[0], k.split(SEP)[2]) else 1, -len(self.edges[k]), k))[:max_edges]
+        ids = {entity_id} | {e for k in keys for e in (k.split(SEP)[0], k.split(SEP)[2])}
+        nodes = [(i, self.nodes[i]["name"], self.nodes[i]["type"]) for i in sorted(ids)]
+        edges = [tuple(k.split(SEP)) for k in sorted(keys)]
+        return mermaid_diagram(nodes, edges, direction)
+
     # ------------------------------------------------------------ local search
 
     def local_context(self, question: str, retriever, k: int = 5, hops: int = 2, max_facts: int = 30,
@@ -347,7 +434,7 @@ class Graph:
         signature = sha("|".join(sorted(members)) + "#" + "|".join(facts))
         if signature not in self.summaries:
             names = [self.nodes[i]["name"] for i in sorted(members, key=lambda i: (-len(self.adj[i]), i))[:15]]
-            data = _json_reply([{"role": "user", "content":
+            data = json_reply([{"role": "user", "content":
                                  "These entities and relations come from documentation about building LLM agents.\n"
                                  f"Entities: {', '.join(names)}\nRelations:\n" + "\n".join(facts) +
                                  '\n\nName the theme these belong to and summarize it in 2 or 3 sentences. '

@@ -34,6 +34,17 @@ Open schema (this tutorial)                         Closed schema (an ontology, 
 (:Entity)-[:RELATES {label, chunks}]->(:Entity)     (:File)-[:IMPLEMENTS]->(:Pattern)                 one relationship type per relation
 ```
 
+The open schema as a picture (a property graph: labelled nodes and relationships that carry properties):
+
+```mermaid
+flowchart LR
+    C["(:Chunk)<br/>id, hash, doc_id, section"] -- "MENTIONS" --> E1["(:Entity)<br/>id, name, type"]
+    C -- "MENTIONS" --> E2["(:Entity)<br/>id, name, type"]
+    E1 -- "RELATES<br/>label, chunks" --> E2
+    classDef n fill:#e0f2fe,stroke:#0369a1,color:#0f172a
+    class C,E1,E2 n
+```
+
 An open schema maps to one generic node label and one generic relationship type with the free-text label as a property. A closed schema maps to labels and relationship types, which is where an ontology pays off in a database: constraints, indexes and queries per class and relation.
 
 ## 4. The candidates
@@ -60,7 +71,7 @@ entity(id, name, type)                    relation(source, label, target)
 mention(entity, chunk)                    fact_source(source, label, target, chunk)      -- the provenance of every fact
 ```
 
-The two-hop neighbourhood of an entity, the heart of local search (Module 7, section 6), is one recursive query. This one was run on a relational copy of the graph built in Module 7 (339 entities, 403 relations, 503 mentions) and gave exactly the same entities and distances as the in-memory search of the lessons, for four different seeds at one and two hops (it ran on SQLite, and PostgreSQL uses the same `WITH RECURSIVE` form):
+The two-hop neighbourhood of an entity, the heart of local search (Module 7, section 6), is one recursive query. This one was run on a relational copy of the graph built in Module 7 (336 entities, 405 relations, 503 mentions) and gave exactly the same entities and distances as the in-memory search of the lessons, for four different seeds at one and two hops (it ran on SQLite, and PostgreSQL uses the same `WITH RECURSIVE` form):
 
 ```sql
 WITH RECURSIVE walk(entity, hops) AS (
