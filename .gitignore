@@ -20,3 +20,5 @@ __pycache__/
 # local environments and dependencies
 .venv/
 node_modules/
+/examples/.memory/
+

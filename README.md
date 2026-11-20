@@ -71,15 +71,15 @@ The provider switch works the same way (`$env:LLM_PROVIDER = "lmstudio"` in Powe
 
 | # | Module | Topics |
 |---|---|---|
-| 1 | Foundations & history | Symbolic agents, expert systems, RL agents, ReAct, function calling, modern SDKs; agent vs. chatbot vs. workflow |
-| 2 | Core building blocks | LLM call, prompts, tool calling, structured output, memory and context, the agent loop |
-| 3 | Patterns | ReAct, plan-and-execute, reflection, routing, prompt chaining, parallelization, orchestrator-workers, evaluator-optimizer |
-| 4 | Multi-agent structures | Supervisor, hierarchical, swarm/handoff, debate and critic |
+| 1 | [Foundations & history](docs/01-foundations.md) | Symbolic agents, expert systems, RL agents, ReAct, function calling, modern SDKs; agent vs. chatbot vs. workflow |
+| 2 | [Core building blocks](docs/02-building-blocks.md) | LLM call, prompts, tool calling, structured output, memory and context, the agent loop |
+| 3 | [Patterns](docs/03-patterns.md) | ReAct, plan-and-execute, reflection, routing, prompt chaining, parallelization, orchestrator-workers, evaluator-optimizer |
+| 4 | [Multi-agent structures](docs/04-multi-agent.md) | Supervisor, hierarchical, swarm/handoff, debate and critic |
 | 5 | [RAG](docs/05-rag.md) | Embeddings, chunking, hybrid search, reranking, evaluating recall, agentic RAG |
 | 6 | [Knowledge bases](docs/06-knowledge-bases.md) | Incremental sync, versions, deletions, safe index releases, embedding-model changes, recall at scale, permissions |
 | 7 | [GraphRAG](docs/07-graphrag.md) | Knowledge graph vs taxonomy vs ontology, entities and relations from text, entity resolution, local and global search, an honest comparison with plain RAG, updates, graph databases (Neo4j, FalkorDB, Memgraph, PostgreSQL) |
 | 8 | [Graph databases](docs/08-graph-databases.md) | Where the graph lives in production: what a store must do, property graph vs RDF, Cypher/GQL, Neo4j vs FalkorDB vs Memgraph vs PostgreSQL, how to choose and migrate |
-| 9 | Memory *(planned)* | Short-term (trimming, summaries), long-term (remember/recall), knowledge-graph memory; production issues |
+| 9 | [Memory](docs/09-memory.md) | Short-term (trim, summarize, persist), long-term (remember/recall/forget, reconcile on write, automatic extraction), facts with history, production issues (privacy, isolation, poisoning) |
 | 10 | Tools & MCP *(planned)* | Scaling tool sets, the Model Context Protocol (a tiny server and client), security |
 | 11 | Frameworks landscape *(planned)* | LangGraph, OpenAI Agents SDK, AutoGen, CrewAI, Semantic Kernel; when to use none |
 | 12 | Best practices *(planned)* | Simplicity, guardrails, evaluation, observability, cost/latency, security (prompt injection), human-in-the-loop |
@@ -109,7 +109,8 @@ examples/js/          framework-agnostic JavaScript; same file names (.mjs)
                       agent (the agent loop: Tool, run_agent / runAgent),
                       retrieval (chunking, vector store, BM25, hybrid search), rag (cited answers, reranking),
                       kb (a knowledge base that changes: sync, versions, deletions, safe releases),
-                      graph_store (knowledge graph: LLM extraction with provenance, local and global search)
+                      graph_store (knowledge graph: LLM extraction with provenance, local and global search),
+                      memory (short-term trim/summarize, long-term memory store, facts with history)
                       lessons (mNN_ prefix): one runnable example per topic, run from the project root
 examples/rag_golden.json   the golden question set of the retrieval evaluation (Module 5)
 examples/graph_golden.json multi-hop questions for the GraphRAG comparison (Module 7)
@@ -132,7 +133,8 @@ requirements.txt      Python dependencies (JavaScript needs none)
 - [x] Module 6: [Knowledge bases](docs/06-knowledge-bases.md)
 - [x] Module 7: [GraphRAG](docs/07-graphrag.md)
 - [x] Module 8: [Graph databases](docs/08-graph-databases.md)
-- [ ] Modules 9-13 (next: Memory)
+- [x] Module 9: [Memory](docs/09-memory.md)
+- [ ] Modules 10-13 (next: Tools & MCP)
 
 ## Further reading and link check
 

@@ -134,4 +134,4 @@ Advice that holds for all of them:
 - [Apache AGE](https://age.apache.org/) (graph queries inside PostgreSQL) and [pgvector](https://github.com/pgvector/pgvector) (vector search for PostgreSQL)
 - How GraphRAG libraries store data: Microsoft's [output tables](https://microsoft.github.io/graphrag/index/outputs/) and [storage configuration](https://microsoft.github.io/graphrag/config/yaml/) (Parquet files and LanceDB by default), and [LightRAG](https://github.com/HKUDS/LightRAG), which can use Neo4j, Memgraph or PostgreSQL as storage
 
-**Next:** Module 9: Memory (coming next)
+**Next:** [Module 9: Memory](09-memory.md)
