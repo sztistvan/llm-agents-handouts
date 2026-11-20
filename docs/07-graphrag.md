@@ -27,7 +27,7 @@ Retrieval of chunks (Module 5) finds the passages *closest to the question*. Thr
 | **Global**: "What are the main themes of the handouts?" | No chunk contains the answer, and top-k returns only a few chunks | Communities and their summaries describe the whole set |
 | **Relations**: "What contrasts with what? What builds on what?" | Relations are implicit in prose | They are extracted once and stored as edges |
 
-GraphRAG is therefore an *indexing* idea: spend LLM calls up front to turn text into entities and relations. Whether that pays off is an empirical question, and sections 6 and 9 give a sober answer.
+GraphRAG is therefore an *indexing* idea: spend LLM calls up front to turn text into entities and relations. Whether that pays off is an empirical question, and sections 7 and 11 give a sober answer.
 
 ## 2. What a knowledge graph is, and how this one is built
 
@@ -42,7 +42,64 @@ flowchart LR
 
 One design decision matters more than any other: the **source of truth is one extraction record per chunk** (the entities and relations the LLM found in it). The graph itself (nodes, edges, neighbours) is *derived* from the records. So every node and edge knows which chunks it came from (**provenance**), every fact can be cited, and updating the graph is the same operation as the sync of Module 6: extract new chunks, drop the records of removed chunks, rebuild. The building block is [`graph_store.py`](../examples/python/graph_store.py) / [`graph_store.mjs`](../examples/js/graph_store.mjs).
 
-## 3. Extraction: `m07_graph_build`
+## 3. Ontology, taxonomy and knowledge graph: what did we build?
+
+A natural question: if an LLM extracts entities and relations, have we built an **ontology**? Almost, and the difference matters. What we extracted is a **knowledge graph**: *facts* about specific things (`supervisor --manages--> worker`). An **ontology** is the *schema* that says what kinds of things and relations may exist at all. The three terms sit on a spectrum of formality:
+
+| Term | What it is | Example from the handouts | How formal |
+|---|---|---|---|
+| **Controlled vocabulary** | An agreed list of terms, nothing more | The entity types `concept, pattern, component, tool, file, parameter, provider, other` in `graph_store` | A list |
+| **Taxonomy** | A hierarchy of categories, with one relation: "is a kind of" (broader and narrower) | Patterns are *workflow patterns* (prompt chaining, routing, ...) or *agent patterns* (ReAct, plan-and-execute, reflection); multi-agent structures are supervisor, hierarchical team, handoff, debate | A tree or a simple graph |
+| **Ontology** | A formal, explicit specification of a domain: the classes (with their taxonomy), the *kinds* of relations, which classes each relation may connect (domain and range), constraints, and rules that support reasoning. Gruber's classic definition is "an explicit specification of a conceptualization" | `implemented in` may only go from a Pattern or Component to a File; `variant of` only from a Pattern to a Pattern; a Reflection *is a* Pattern, and a Pattern is not a File | Formal, usually written in OWL or RDFS |
+| **Knowledge graph** | The *data*: the specific entities and the relations between them, ideally following an ontology | The graph of this module: 339 entities, 403 relations | As formal as the schema it follows |
+
+They fit together like this: a **taxonomy is the backbone of an ontology** (its class hierarchy); the ontology adds the typed relations, constraints and rules; the knowledge graph is the instance data that follows the ontology. Ontologists call the schema part the T-Box (classes and relations) and the data part the A-Box (individuals and facts). A thesaurus sits between taxonomy and ontology: a taxonomy plus related and synonymous terms (the W3C's SKOS standard represents taxonomies and thesauri; OWL represents ontologies).
+
+### What this tutorial built
+
+An **open** knowledge graph, extracted without a schema ("schema on read"). Measured against the table above:
+
+- **Types:** a flat list of eight, with no hierarchy. Not even a taxonomy: nothing says that a *supervisor* and a *handoff* are both multi-agent structures.
+- **Relations:** free text (`uses-parameter`, `implemented-in`, `contrasts with`). There is no vocabulary of relations, and nothing says which classes a relation may connect, so nothing prevents `reflection --implements--> m03_patterns.py` from being extracted backwards.
+- **No constraints and no reasoning.**
+
+That is why the extraction was cheap to start, why it found things nobody planned (`tree of thought` appeared when we added a sentence), and why it is noisy: duplicate names (section 5), `other` entities and relation labels that differ by a hyphen.
+
+### Three ways to build the graph
+
+| Approach | Where the schema comes from | Strengths | Weaknesses |
+|---|---|---|---|
+| **Open extraction** (this module) | Nowhere: the LLM invents types and labels | Cheap to start, finds the unexpected | Noisy, duplicates, no guarantees |
+| **Ontology-guided extraction** | A hand-written or reviewed ontology, put in the prompt. The LLM may only use its classes and relations, and the output is **validated** against it (allowed labels, domain and range); a violation is rejected or sent back like invalid JSON in Module 2 | Clean, typed, consistent and stable across re-extractions; enables typed queries and taxonomy-based reasoning | Needs domain expertise and maintenance; misses what the ontology lacks (allow an `other` class and review it) |
+| **Manually curated, or from existing sources** | Experts, or a database, a catalogue or a public graph such as Wikidata; an LLM at most links text to the existing entities | The highest quality | Slow and expensive; does not cover free text |
+
+They combine: start **open**, count which types and labels the LLM uses most, review them into a first ontology, and then enforce it ("ontology learning": the LLM proposes, people decide). Real tools do the enforcing: the GraphRAG SDK of FalkorDB, for example, states that its ontology constrains what can be extracted, so that the graph stores typed, checkable facts instead of free-form model output.
+
+A first ontology for these handouts could look like this (a sketch to illustrate; yours would come from your documents and your questions):
+
+```text
+Classes (the taxonomy)
+  Pattern
+    WorkflowPattern:     prompt chaining, routing, parallelization, orchestrator-workers, evaluator-optimizer
+    AgentPattern:        ReAct, plan-and-execute, reflection
+    MultiAgentStructure: supervisor, hierarchical team, handoff, pipeline, debate
+  Component:             agent loop, tool, memory
+  Artifact
+    File, Parameter
+
+Relations (domain -> range)
+  variant_of      Pattern -> Pattern
+  builds_on       Pattern -> Pattern or Component
+  implemented_in  Pattern or Component -> File
+  limited_by      Pattern or Component -> Parameter
+  contrasts_with  Pattern -> Pattern
+```
+
+What it would buy: **validation** at extraction time; **taxonomy-based expansion** in search (a question about "multi-agent structures" would also seed the supervisor, handoff and debate chunks through the subclass links, which neither plain RAG nor our open graph can do); **consistency** across re-extractions; and a direct mapping to database labels, relationship types and constraints (section 10). It costs expertise and upkeep, so invest when the domain is stable and shared (regulation, products, an audit trail, categories you aggregate by) and skip it for exploratory or fast-changing text. Version the ontology like the extraction prompt: a changed class or relation means re-extraction, planned like a release in [Module 6](06-knowledge-bases.md).
+
+Two graph data models carry ontologies. **RDF** (triples with global identifiers) has the ontology languages built in (RDFS, OWL, with SHACL for validation) and is queried with SPARQL. A **property graph**, the model of this module and of most GraphRAG tools, has no widely used ontology language: the ontology lives in your labels, relationship types, constraints and the validation code you write.
+
+## 4. Extraction: `m07_graph_build`
 
 `extract_chunk` makes one LLM call per chunk. The prompt asks for JSON only: at most 8 entities (short, singular, canonical names, with a type from a fixed list) and at most 8 relations (a short verb phrase connecting two of the entities). The reply goes through the parse-validate-retry pattern of Module 2: bad JSON is sent back with a request to fix it, names are normalized, relations whose endpoints were not listed get them added, and a chunk that never yields usable JSON is *not stored*, so the next sync retries it.
 
@@ -67,9 +124,9 @@ Things to notice:
 
 - **Cost scales with the corpus, not with the questions.** One call per chunk: 66 here, a million chunks means a million LLM calls (plus time under rate limits). Embeddings for plain RAG cost far less. The saved records make this a one-time cost per chunk and per extraction prompt.
 - **Quality depends on the model.** A small local model may fail on JSON or invent relations; here all 66 chunks succeeded. Always count failures and read samples.
-- **The output is messy even when it works:** relation labels came back as `uses-parameter` and `implemented-in`, some entities are `other`, and the same idea appears under several names (next section).
+- **The output is messy even when it works:** relation labels came back as `uses-parameter` and `implemented-in`, some entities are `other`, and the same idea appears under several names (section 5). The graph is *open*: nothing constrains the types or the labels (section 3 explains what an ontology would add).
 
-## 4. Entity resolution: the main quality problem
+## 5. Entity resolution: the main quality problem
 
 If `tool` and `tools`, or `handoff` and `handoffs`, become different nodes, the graph is fragmented and every search that follows it loses links. **Entity resolution** decides which names are one entity. The lesson applies one simple, safe rule on the *derived* graph (the records stay untouched): names that differ only by plural forms are merged into the variant that occurs in most chunks. That merged 6 variants (`gates` into `gate`, `handoffs` into `handoff`, `local models` into `local model`, ...). What remains is a list of judgement calls:
 
@@ -91,9 +148,9 @@ The last two show why this is hard: *a worker's agent loop is an agent loop*, bu
 | An LLM judging candidate pairs | Hard, context-dependent cases | Cost, and the LLM's own mistakes |
 | Human review of the top candidates | The few entities everything hangs on | Time |
 
-The same goes for the **schema**. An open schema (the LLM chooses entity types and relation labels) is flexible but noisy, as above; a closed one (a fixed list of types and relations) is cleaner but misses what you did not anticipate.
+The same goes for the **schema**. An open schema (the LLM chooses entity types and relation labels) is flexible but noisy, as above; a closed one (a fixed list of types and relations, in the end an ontology) is cleaner but misses what you did not anticipate. Section 3 compares the approaches.
 
-## 5. Local search: `m07_graphrag`
+## 6. Local search: `m07_graphrag`
 
 For a question, local search uses the graph in two ways ([`Graph.local_context`](../examples/python/graph_store.py)):
 
@@ -119,7 +176,7 @@ A real run for the question above (shortened):
 
 The plain top-5 never reached the Module 2 section that explains `run_agent`; the graph brought it in. (This question was *chosen* for the lesson because it shows the mechanism. The next section is the fair test.) Note also that both the plain and the graph answer were correct here: the Module 4 chunk already says that workers call `run_agent`. Evidence coverage and answer correctness are different measures.
 
-## 6. Does it help? An honest comparison
+## 7. Does it help? An honest comparison
 
 `examples/graph_golden.json` holds 13 questions: 10 multi-hop ones that each need evidence from 2 or 3 sections, and 3 single-hop controls. For each method the lesson checks whether the context contains **all** the needed sections (no LLM calls, so it is cheap and repeatable). Plain retrieval is shown at several context sizes, because "just retrieve more" is the obvious competitor:
 
@@ -144,7 +201,7 @@ How to read it:
 | Explainability | the chunks | the chunks and the facts that led to them | the summaries |
 | Typical failure | the right chunk is not retrieved | wrong or missing extractions, false merges | summaries that mix unrelated things |
 
-## 7. Global search: `m07_graphrag_global`
+## 8. Global search: `m07_graphrag_global`
 
 "What are the main themes of the handouts as a whole?" has no answer in any chunk. GraphRAG groups the graph into **communities** (clusters of densely connected entities), has an LLM write a **title and summary** for each, and answers from the summaries. The lesson groups the graph with **label propagation**: every entity repeatedly takes the most common label among its neighbours, in a fixed order, so the result is the same every run. Production systems use the more refined **Leiden** algorithm, often with several levels of communities.
 
@@ -169,7 +226,7 @@ How to read it:
 
 This is where GraphRAG earns its keep: plain RAG correctly says it cannot answer, and the community summaries give a usable overview. It also shows the weak spots. The titles are repetitive, a community such as `m01, lm studio, run_in_parallel, azure, extract_task` mixes unrelated things, and the quality of the themes depends on the quality of the graph. A summary is cached by the content of its community, so only changed communities are summarized again. With hundreds of communities the summaries no longer fit one prompt: the real method *maps* the question over each summary and then *reduces* the partial answers.
 
-## 8. Keeping the graph up to date
+## 9. Keeping the graph up to date
 
 Because every record knows its chunk, the sync of Module 6 applies directly: chunks are compared by hash, only new chunks are extracted, the records of removed chunks are dropped, and the derived graph is rebuilt (cheap). The lesson changes one sentence in one chunk, on a copy of the graph:
 
@@ -186,7 +243,102 @@ What to plan for:
 - **Deletion must reach the derived data:** the records, the entities and relations that only came from the deleted text, the community summaries built from them, and the cache. Verify by searching the graph.
 - **A new extraction prompt or schema invalidates everything** (`PROMPT_VERSION` in the code), like a new embedding model in Module 6: plan it as a release, with a validation gate.
 
-## 9. When (not) to use GraphRAG
+## 10. Storing the graph: from JSON to a database
+
+The lessons keep the graph in a JSON file and in Python or JavaScript dictionaries. That is the right size for a tutorial and wrong for production: one process, the whole graph in memory, no concurrent writes, no transactions, no indexes, no permissions. A real system needs a store. The good news is that the design of this module makes the choice reversible: the **extraction records are the source of truth** and the graph is a derived *index*, so a database can be rebuilt from the records, swapped, or run next to the old one (the generation idea of [Module 6](06-knowledge-bases.md#5-releasing-safely-generations-and-a-validation-gate)).
+
+### What the store has to do
+
+| Need | Why it matters here |
+|---|---|
+| Persistence and transactions | A sync (section 9) must not leave a half-updated graph; concurrent readers must see a consistent one |
+| Fast neighbourhood traversal | Local search walks 1 to 3 hops from several seeds for every question |
+| Indexes and text search on entity names | Finding the entities named in a question |
+| Vector search | Linking a question to entities (by embeddings of names or descriptions) and finding chunks, ideally in the *same* query as the traversal |
+| Filters and permissions | Every fact carries its source chunk, so access control is a filter on that link |
+| Graph algorithms | Communities (Leiden), PageRank and similar, without exporting the graph |
+| Scale and operations | Size, backup, high availability, monitoring, a managed offering, drivers for your language |
+| Ecosystem and license | Which GraphRAG libraries already support it, and what the license allows |
+
+### Two data models, three query languages
+
+This module's graph is a **property graph**: nodes and relationships that carry properties. The main alternative is **RDF**: triples with global identifiers, queried with SPARQL, with built-in ontology languages (RDFS, OWL, SHACL; see section 3). Most GraphRAG tooling uses property graphs, queried with **Cypher** (the openCypher language) or **GQL**, the ISO/IEC 39075:2024 standard graph query language, published in April 2024. **SQL/PGQ**, part of SQL:2023, brings property graph queries to relational databases. In practice you will meet Cypher first, and most products below speak (a dialect of) it.
+
+### Mapping the graph of this module
+
+```text
+Open schema (this tutorial)                         Closed schema (an ontology, section 3)
+(:Entity {id, name, type})                          (:Pattern {id, name}) (:File {id, path}) ...      one label per class
+(:Chunk  {id, hash, doc_id, section})               (:Chunk ...)
+(:Chunk)-[:MENTIONS]->(:Entity)                     (:Chunk)-[:MENTIONS]->(:Pattern)
+(:Entity)-[:RELATES {label, chunks}]->(:Entity)     (:File)-[:IMPLEMENTS]->(:Pattern)                 one relationship type per relation
+```
+
+An open schema maps to one generic node label and one generic relationship type with the free-text label as a property. A closed schema maps to labels and relationship types, which is where an ontology pays off in a database: constraints, indexes and queries per class and relation.
+
+### The candidates
+
+| | **Neo4j** | **FalkorDB** | **Memgraph** | **PostgreSQL** |
+|---|---|---|---|---|
+| What it is | A native property graph database, the best-known one | A property graph database that stores adjacency as sparse matrices (GraphBLAS); speaks the Redis protocol and Bolt | An in-memory property graph database written in C/C++ | A relational database; graphs as tables, or with the Apache AGE extension |
+| Query language | Cypher | OpenCypher, with proprietary extensions | Cypher-compatible | SQL (`WITH RECURSIVE`); openCypher through Apache AGE |
+| Vector search | Vector indexes in Cypher (for example cosine, 1536 dimensions) | Full-text, vector and range indexes | Built-in text and vector indexes | `pgvector` extension |
+| Graph algorithms | Graph Data Science library (Leiden and more) | Some built-in procedures (check that the ones you need, such as community detection, exist) | MAGE library: 40+ algorithms, including community detection | Not built in; run them in your code, as the lessons do |
+| License (check it) | Community Edition GPLv3; commercial editions and a managed service | Server Side Public License v1 (SSPL, not OSI-approved) | Business Source License 1.1 and a commercial enterprise license | PostgreSQL License; AGE is Apache-2.0; `pgvector` uses the PostgreSQL License |
+| Works with GraphRAG libraries | An official GraphRAG package for Python; supported by LightRAG | GraphRAG SDK (ontology-constrained extraction) | Supported by LightRAG | LightRAG can use it as all-in-one storage |
+| Good fit when | You need rich traversals, the largest ecosystem and tooling, and a mature operational story | You want a fast engine with the Redis-style protocol and a lightweight deployment | You need low-latency, in-memory graph analytics and the graph fits in RAM | You already run PostgreSQL, the graph is moderate, and one system to operate matters more than graph-specific features |
+| Watch out | The license of the edition you need; operating clusters | The SSPL if you offer the database as a service to others | The graph must fit in memory; the BSL | Deep traversals and graph algorithms are yours to build and to measure |
+
+For comparison, Microsoft's GraphRAG library stores its output as **Parquet files** and its vectors in **LanceDB** by default, with options such as blob storage, Cosmos DB and Azure AI Search: a batch-oriented design that does not need a graph database at all. Licenses and product features change, so treat the table as a starting point and read each project's current documentation. It is based on their READMEs and documentation at the time of writing, not on benchmarks: **no performance claim is made here, measure with your own queries and data.**
+
+### PostgreSQL deserves a real look
+
+A graph of this size and shape (a few entities and relations per chunk, neighbourhoods of 1 to 3 hops) fits a relational database well. Four tables hold it, and they follow directly from the records of this module:
+
+```text
+entity(id, name, type)                    relation(source, label, target)
+mention(entity, chunk)                    fact_source(source, label, target, chunk)      -- the provenance of every fact
+```
+
+The two-hop neighbourhood of an entity, the heart of local search, is one recursive query. This one was run on a relational copy of the graph built in this module (339 entities, 403 relations, 503 mentions) and gave exactly the same entities and distances as the in-memory search of the lessons, for four different seeds at one and two hops (it ran on SQLite, and PostgreSQL uses the same `WITH RECURSIVE` form):
+
+```sql
+WITH RECURSIVE walk(entity, hops) AS (
+    SELECT 'supervisor', 0
+  UNION
+    SELECT CASE WHEN r.source = w.entity THEN r.target ELSE r.source END, w.hops + 1
+    FROM walk w JOIN relation r ON r.source = w.entity OR r.target = w.entity
+    WHERE w.hops < 2
+)
+SELECT entity, MIN(hops) AS hops FROM walk GROUP BY entity ORDER BY hops, entity;
+```
+
+With `pgvector` the same database also answers "which entities or chunks are closest to this question" (`ORDER BY embedding <=> $1 LIMIT 5`), and joining the two gives local search in SQL. The honest limits: no built-in community detection, variable-length path semantics are clumsier than in Cypher, very deep traversals on very large graphs may favour a native engine (measure), and cycles need care in recursive queries (newer PostgreSQL versions have a `CYCLE` clause for this). The same neighbourhood in Cypher, which Neo4j, FalkorDB, Memgraph and Apache AGE read with small dialect differences (check each product's documentation):
+
+```cypher
+MATCH p = (:Entity {id: 'supervisor'})-[:RELATES*1..2]-(n:Entity)
+RETURN n.name AS entity, min(length(p)) AS hops ORDER BY hops, entity;
+```
+
+### How to choose, and how to start
+
+| Your situation | Start with |
+|---|---|
+| A prototype, a batch job, a few thousand chunks | The files of this module, or Parquet as in Microsoft's library |
+| You already run PostgreSQL, moderate size, 1 to 3 hop queries, one system to operate | PostgreSQL with `pgvector` (and AGE if you want Cypher) |
+| Graph-heavy queries and algorithms, a large graph, a team that wants graph tooling | Neo4j, or an engine in the same family (FalkorDB, Memgraph) after reading their licenses |
+| Low-latency analytics and the graph fits in memory | Memgraph, FalkorDB |
+| You want a managed service | Check what your cloud and each vendor offer for the engine you picked |
+
+Advice that holds for all of them:
+
+- **Keep the extraction records as the source of truth** (for example one table or collection with the JSON of each chunk's record). The graph database is then a rebuildable index: you can change engines, rebuild after a prompt change, or run a new generation next to the live one and switch after validation.
+- **Bulk-load in batches** and index the entity id, the chunk link and the entity name before you query.
+- **Check equivalence, as done above:** run the neighbourhoods and the golden questions on the old and the new store and compare before you cut over.
+- **Version the schema** like the extraction prompt: a changed ontology or label set means re-extraction, planned like a release (Module 6).
+- **Do not add a new database too early.** The reason to leave files or PostgreSQL is a measured need: traversal speed, algorithms, scale or tooling.
+
+## 11. When (not) to use GraphRAG
 
 Try the cheaper steps first; each one fixes a different problem:
 
@@ -211,9 +363,9 @@ The lessons run on 66 chunks. What changes with a real corpus, and what to look 
 |---|---|---|
 | Extraction cost and model | 66 calls, a small model, 4 in parallel | Calls grow with the corpus: budget them, use a cheaper model for extraction, batch and rate-limit, keep records so that nothing is extracted twice |
 | Extraction quality | Counts and a few samples | Failure rate, valid-JSON rate, sampled review, the effect of a model or prompt change on the graph, a versioned prompt |
-| Schema | Open: the LLM chooses types and labels | A governed list of entity types and relations when the domain is stable; a mapping for the rest |
+| Schema and ontology | Open: the LLM chooses types and labels | A governed ontology when the domain is stable (classes, relations with domain and range, a validator in the extraction step), a mapping for the rest, versioned like the prompt ([section 3](#3-ontology-taxonomy-and-knowledge-graph-what-did-we-build)) |
 | Entity resolution | Plural forms plus a list of suspects | Alias tables, embedding clustering with review, an LLM judge for hard pairs, and a record of every merge so it can be undone |
-| Storage | A JSON file and in-memory dictionaries | A graph database (for example Neo4j) or a store built for it, indexes on entity names and chunk links, backups |
+| Storage | A JSON file and in-memory dictionaries | A database chosen for a measured need (PostgreSQL with `pgvector`, Neo4j, FalkorDB, Memgraph; [section 10](#10-storing-the-graph-from-json-to-a-database)), the extraction records kept as the source of truth, indexes on entity names and chunk links, backups, permissions as filters on the chunk link |
 | Communities | Label propagation, one level | Leiden, several levels, summaries per level, a plan for recomputing and re-summarizing after changes |
 | Updates | Hash-based re-extraction | Change feeds, idempotent jobs, validation gates before a new graph goes live ([Module 6](06-knowledge-bases.md)), deletion that reaches records, caches and summaries |
 | Evaluation | 13 coverage questions, no answer scoring | A multi-hop and a global question set from real users, answer-level checks (LLM judges are noisy: repeat them), cost and latency next to quality |
@@ -238,6 +390,10 @@ The lessons run on 66 chunks. What changes with a real corpus, and what to look 
 5. Implement multi-query retrieval (Module 5, exercise 4) and compare it with graph local search on the golden set.
 6. Change `min_size` and `rounds` in `communities`. Which communities are meaningful and which are noise?
 7. Delete a section from the handouts and re-sync: which entities, facts and summaries disappear or become stale?
+8. Write a small ontology for the handouts (classes, a taxonomy, relations with domain and range). Put it in the extraction prompt, add a validator that rejects triples breaking domain and range, and compare the statistics and the coverage with the open extraction.
+9. Add taxonomy-based expansion to local search: a question that names a class ("multi-agent structures") also seeds its subclasses. Which golden questions change?
+10. Export the graph to SQLite or PostgreSQL (the tables `entity`, `relation`, `mention` and `fact_source` of section 10) and re-implement the two-hop neighbourhood in SQL. Check it against `local_context`, as the section did.
+11. Load the graph into Neo4j, FalkorDB or Memgraph (each offers a Docker image) and run the Cypher neighbourhood query of section 10. Compare the answers and the speed with the in-memory version, first on this graph and then on ten times more synthetic data.
 
 ## Further reading
 
@@ -249,5 +405,8 @@ The lessons run on 66 chunks. What changes with a real corpus, and what to look 
 - Hogan et al., [*Knowledge Graphs*](https://arxiv.org/abs/2003.02320) (2020): the background on graphs, schemas and resolution
 - Traag et al., [*From Louvain to Leiden: guaranteeing well-connected communities*](https://arxiv.org/abs/1810.08473) (2018) and Raghavan et al., [*Near linear time algorithm to detect community structures in large-scale networks*](https://arxiv.org/abs/0709.2938) (2007, label propagation)
 - Neo4j, [GraphRAG for Python](https://neo4j.com/docs/neo4j-graphrag-python/current/)
+- Ontologies and taxonomies: Gruber, [*A Translation Approach to Portable Ontology Specifications*](https://tomgruber.org/writing/ontolingua-kaj-1993.pdf) (1993, the classic definition); Noy and McGuinness, [*Ontology Development 101*](https://protege.stanford.edu/publications/ontology_development/ontology101.pdf) (a practical guide to a first ontology); the W3C standards [OWL 2 overview](https://www.w3.org/TR/owl2-overview/) and [SKOS](https://www.w3.org/TR/skos-reference/) (taxonomies and thesauri); [Schema.org](https://schema.org/) as a widely used practical vocabulary
+- Graph databases and languages: [openCypher](https://opencypher.org/) and the [GQL standard](https://www.gqlstandards.org/); Neo4j's [vector indexes](https://neo4j.com/docs/cypher-manual/current/indexes/semantic-indexes/vector-indexes/), [Graph Data Science Leiden](https://neo4j.com/docs/graph-data-science/current/algorithms/leiden/) and [licensing](https://neo4j.com/licensing/); the [FalkorDB documentation](https://docs.falkordb.com/) and its [GraphRAG SDK](https://github.com/FalkorDB/GraphRAG-SDK); Memgraph's [vector search](https://memgraph.com/docs/querying/vector-search) and [Leiden community detection](https://memgraph.com/docs/advanced-algorithms/available-algorithms/leiden_community_detection); [Apache AGE](https://age.apache.org/) (graph queries in PostgreSQL) and PostgreSQL's [recursive queries](https://www.postgresql.org/docs/current/queries-with.html)
+- How GraphRAG libraries store data: Microsoft's [output tables](https://microsoft.github.io/graphrag/index/outputs/) and [storage configuration](https://microsoft.github.io/graphrag/config/yaml/) (Parquet files and LanceDB by default)
 
 **Next:** Module 8: Memory (coming next)

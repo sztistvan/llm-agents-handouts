@@ -75,7 +75,7 @@ A deleted document is first *hidden* (its chunks get a `valid_to`), which is why
    as of day 25 now:             -> NOT FOUND in the top 3 chunks
 ```
 
-(A search always returns *something*, so the lesson checks the content of the top results, not whether the list is empty.) In production the content must also leave every place derived from it: the keyword index, embedding and result caches, logs, backups, evaluation sets and, with GraphRAG ([Module 7](07-graphrag.md#8-keeping-the-graph-up-to-date)), the entities and relations extracted from it. Verify by searching for the deleted text.
+(A search always returns *something*, so the lesson checks the content of the top results, not whether the list is empty.) In production the content must also leave every place derived from it: the keyword index, embedding and result caches, logs, backups, evaluation sets and, with GraphRAG ([Module 7](07-graphrag.md#9-keeping-the-graph-up-to-date)), the entities and relations extracted from it. Verify by searching for the deleted text.
 
 ## 5. Releasing safely: generations and a validation gate
 

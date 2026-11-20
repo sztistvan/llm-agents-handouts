@@ -77,7 +77,7 @@ The provider switch works the same way (`$env:LLM_PROVIDER = "lmstudio"` in Powe
 | 4 | Multi-agent structures | Supervisor, hierarchical, swarm/handoff, debate and critic |
 | 5 | [RAG](docs/05-rag.md) | Embeddings, chunking, hybrid search, reranking, evaluating recall, agentic RAG |
 | 6 | [Knowledge bases](docs/06-knowledge-bases.md) | Incremental sync, versions, deletions, safe index releases, embedding-model changes, recall at scale, permissions |
-| 7 | [GraphRAG](docs/07-graphrag.md) | Entities and relations from text, entity resolution, local and global search, an honest comparison with plain RAG, cost, updates |
+| 7 | [GraphRAG](docs/07-graphrag.md) | Knowledge graph vs taxonomy vs ontology, entities and relations from text, entity resolution, local and global search, an honest comparison with plain RAG, updates, graph databases (Neo4j, FalkorDB, Memgraph, PostgreSQL) |
 | 8 | Memory *(planned)* | Short-term (trimming, summaries), long-term (remember/recall), knowledge-graph memory; production issues |
 | 9 | Tools & MCP *(planned)* | Scaling tool sets, the Model Context Protocol (a tiny server and client), security |
 | 10 | Frameworks landscape *(planned)* | LangGraph, OpenAI Agents SDK, AutoGen, CrewAI, Semantic Kernel; when to use none |
@@ -91,7 +91,7 @@ Modules 5 to 7 all deal with giving an agent knowledge it was not trained on. Th
 | | **5 RAG** | **6 Knowledge bases** | **7 GraphRAG** |
 |---|---|---|---|
 | **Main question** | How do I find the right text and answer from it? | How do I keep that working as documents change and grow? | What if the answer lives in the relations between documents? |
-| **Learning objectives** | Explain the pipeline. Chunk, embed, and run dense, keyword and hybrid search. Measure recall@k and MRR. Choose naive or agentic RAG. | Design a sync with content hashes. Handle versions and deletion. Release through a validation gate. Plan model changes. Reason about scale and recall. | Explain what a graph adds (multi-hop and "global" questions). Build one from LLM extraction. Run local and global search. Judge when it is worth the cost. |
+| **Learning objectives** | Explain the pipeline. Chunk, embed, and run dense, keyword and hybrid search. Measure recall@k and MRR. Choose naive or agentic RAG. | Design a sync with content hashes. Handle versions and deletion. Release through a validation gate. Plan model changes. Reason about scale and recall. | Explain what a graph adds (multi-hop and "global" questions) and how it relates to taxonomies and ontologies. Build one from LLM extraction. Run local and global search. Choose a storage. Judge when it is worth the cost. |
 | **Practical issues** | Chunking pitfalls, similarity thresholds per model, a small golden set, injection through documents | Hash-based change detection, version policy, purging for compliance, rollback, rebuild cost, recall lost to approximate search, permissions | Extraction cost (one LLM call per chunk) and quality with small models, duplicate entities, provenance back to chunks, community summaries, updates, hard evaluation |
 | **Production checklist focuses on** | Retrieval quality | Operations | Cost and complexity |
 
