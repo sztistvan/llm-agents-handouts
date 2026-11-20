@@ -75,7 +75,7 @@ The provider switch works the same way (`$env:LLM_PROVIDER = "lmstudio"` in Powe
 | 2 | Core building blocks | LLM call, prompts, tool calling, structured output, memory and context, the agent loop |
 | 3 | Patterns | ReAct, plan-and-execute, reflection, routing, prompt chaining, parallelization, orchestrator-workers, evaluator-optimizer |
 | 4 | Multi-agent structures | Supervisor, hierarchical, swarm/handoff, debate and critic |
-| 5 | RAG *(in progress)* | Embeddings, chunking, hybrid search, reranking, evaluating recall, agentic RAG; then knowledge bases (updates, versions, scale) and GraphRAG |
+| 5 | RAG *(in progress)* | Embeddings, chunking, hybrid search, reranking, evaluating recall, agentic RAG, knowledge bases (updates, versions, deletions, safe releases, scale); GraphRAG to come |
 | 6 | Memory *(planned)* | Short-term (trimming, summaries), long-term (remember/recall), knowledge-graph memory; production issues |
 | 7 | Tools & MCP *(planned)* | Scaling tool sets, the Model Context Protocol (a tiny server and client), security |
 | 8 | Frameworks landscape *(planned)* | LangGraph, OpenAI Agents SDK, AutoGen, CrewAI, Semantic Kernel; when to use none |
@@ -91,7 +91,8 @@ examples/python/      framework-agnostic Python; shared building blocks + mNN_* 
 examples/js/          framework-agnostic JavaScript; same file names (.mjs)
                       shared building blocks (no prefix): llm_client (talk to the model, embeddings),
                       agent (the agent loop: Tool, run_agent / runAgent),
-                      retrieval (chunking, vector store, BM25, hybrid search), rag (cited answers, reranking)
+                      retrieval (chunking, vector store, BM25, hybrid search), rag (cited answers, reranking),
+                      kb (a knowledge base that changes: sync, versions, deletions, safe releases)
                       lessons (mNN_ prefix): one runnable example per topic, run from the project root
 examples/rag_golden.json   the golden question set of the retrieval evaluation (Module 5)
 examples/langgraph/   LangGraph examples (planned, Module 8)
@@ -108,7 +109,7 @@ requirements.txt      Python dependencies (JavaScript needs none)
 - [x] Module 2: [Core building blocks](docs/02-building-blocks.md)
 - [x] Module 3: [Patterns](docs/03-patterns.md)
 - [x] Module 4: [Multi-agent structures](docs/04-multi-agent.md)
-- [ ] Module 5: [RAG](docs/05-rag.md) (basics done; knowledge bases and GraphRAG to come)
+- [ ] Module 5: [RAG](docs/05-rag.md) (basics and knowledge bases done; GraphRAG to come)
 - [ ] Modules 6-10
 
 ## Further reading and link check

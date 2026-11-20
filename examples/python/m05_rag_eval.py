@@ -4,22 +4,12 @@ examples/rag_golden.json lists questions and the sections that answer them. A re
 expected sections is among the top k chunks. Run:  python examples/python/m05_rag_eval.py [--rerank]
 (--rerank adds the LLM reranker: one extra model call per question.)
 """
-import json
 import sys
 
 from rag import rerank
-from retrieval import ROOT, load_retriever
+from retrieval import first_hit_rank, load_golden, load_retriever
 
-GOLDEN = ROOT / "examples" / "rag_golden.json"
 KS = (1, 3, 5)
-
-
-def is_hit(chunk: dict, expect: list[list[str]]) -> bool:
-    return any(chunk["doc_id"] == doc and section.lower() in chunk["section"].lower() for doc, section in expect)
-
-
-def first_hit_rank(hits, expect) -> int | None:
-    return next((rank for rank, (_, chunk) in enumerate(hits, start=1) if is_hit(chunk, expect)), None)
 
 
 def evaluate(retriever, golden: list[dict], method: str) -> tuple[dict, list]:
@@ -38,7 +28,7 @@ def evaluate(retriever, golden: list[dict], method: str) -> tuple[dict, list]:
 
 if __name__ == "__main__":
     retriever = load_retriever()
-    golden = json.loads(GOLDEN.read_text(encoding="utf-8"))
+    golden = load_golden()
     methods = ["bm25"] + (["dense", "hybrid"] if retriever.store else [])
     if "--rerank" in sys.argv and retriever.store:
         methods.append("hybrid+rerank")

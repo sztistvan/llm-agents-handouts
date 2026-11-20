@@ -3,22 +3,11 @@
 // examples/rag_golden.json lists questions and the sections that answer them. A retrieval "hit" means one of the
 // expected sections is among the top k chunks. Run:  node examples/js/m05_rag_eval.mjs [--rerank]
 // (--rerank adds the LLM reranker: one extra model call per question.)
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { rerank } from "./rag.mjs";
-import { ROOT, loadRetriever } from "./retrieval.mjs";
+import { firstHitRank, loadGolden, loadRetriever } from "./retrieval.mjs";
 
-const GOLDEN = join(ROOT, "examples", "rag_golden.json");
 const KS = [1, 3, 5];
-
-const isHit = (chunk, expect) =>
-  expect.some(([doc, section]) => chunk.doc_id === doc && chunk.section.toLowerCase().includes(section.toLowerCase()));
-
-const firstHitRank = (hits, expect) => {
-  const i = hits.findIndex(([, chunk]) => isHit(chunk, expect));
-  return i === -1 ? null : i + 1;
-};
 
 async function evaluate(retriever, golden, method) {
   const ranks = [];
@@ -36,7 +25,7 @@ async function evaluate(retriever, golden, method) {
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const retriever = await loadRetriever();
-  const golden = JSON.parse(readFileSync(GOLDEN, "utf8"));
+  const golden = loadGolden();
   const methods = ["bm25", ...(retriever.store ? ["dense", "hybrid"] : [])];
   if (process.argv.includes("--rerank") && retriever.store) methods.push("hybrid+rerank");
   console.log(`${golden.length} golden questions, ${retriever.chunks.length} chunks\n`);

@@ -235,6 +235,30 @@ export class Retriever {
   }
 }
 
+// ---------------------------------------------------------------- evaluation helpers
+
+export const GOLDEN = join(ROOT, "examples", "rag_golden.json"); // questions with the sections that answer them
+
+export const loadGolden = () => JSON.parse(readFileSync(GOLDEN, "utf8"));
+
+/** Is this chunk one of the expected [file, section name] pairs? */
+export const isHit = (chunk, expect) =>
+  expect.some(([doc, section]) => chunk.doc_id === doc && chunk.section.toLowerCase().includes(section.toLowerCase()));
+
+export const firstHitRank = (hits, expect) => {
+  const i = hits.findIndex(([, chunk]) => isHit(chunk, expect));
+  return i === -1 ? null : i + 1;
+};
+
+/** The share of golden questions whose expected section is among the top k chunks. */
+export async function recallAtK(retriever, golden, k = 5, mode = "hybrid") {
+  let found = 0;
+  for (const item of golden) {
+    if (firstHitRank(await retriever.search(item.question, k, { mode }), item.expect) !== null) found++;
+  }
+  return found / golden.length;
+}
+
 // ---------------------------------------------------------------- building the index
 
 /** Embed all chunks, or load the saved index if neither the chunks nor the embedding model changed. */

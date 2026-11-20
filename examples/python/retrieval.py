@@ -226,6 +226,31 @@ class Retriever:
         return [(score, by_id[chunk_id]) for chunk_id, score in ranked]
 
 
+# ---------------------------------------------------------------- evaluation helpers
+
+GOLDEN = ROOT / "examples" / "rag_golden.json"  # questions with the sections that answer them
+
+
+def load_golden() -> list[dict]:
+    return json.loads(GOLDEN.read_text(encoding="utf-8"))
+
+
+def is_hit(chunk: dict, expect: list[list[str]]) -> bool:
+    """Is this chunk one of the expected [file, section name] pairs?"""
+    return any(chunk["doc_id"] == doc and section.lower() in chunk["section"].lower() for doc, section in expect)
+
+
+def first_hit_rank(hits: list[tuple[float, dict]], expect: list[list[str]]) -> int | None:
+    return next((rank for rank, (_, chunk) in enumerate(hits, start=1) if is_hit(chunk, expect)), None)
+
+
+def recall_at_k(retriever: Retriever, golden: list[dict], k: int = 5, mode: str = "hybrid") -> float:
+    """The share of golden questions whose expected section is among the top k chunks."""
+    found = sum(1 for item in golden
+                if first_hit_rank(retriever.search(item["question"], k=k, mode=mode), item["expect"]) is not None)
+    return found / len(golden)
+
+
 # ---------------------------------------------------------------- building the index
 
 def load_or_build_index(chunks: list[dict], path: Path | None = None) -> VectorStore:

@@ -34,18 +34,40 @@ export function getConfig() {
   };
 }
 
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/**
+ * fetch with a few retries for failures that are worth retrying: network errors (a dropped connection),
+ * 429 (rate limit) and 5xx (server trouble), with a growing pause. The Python SDK does this by default.
+ * A timeout is not retried: it would only triple the wait.
+ */
+async function fetchWithRetry(url, init, timeoutMs, attempts = 3) {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      const res = await fetch(url, { ...init, signal: AbortSignal.timeout(timeoutMs) });
+      if ((res.status === 429 || res.status >= 500) && attempt < attempts) {
+        await sleep(500 * 2 ** (attempt - 1));
+        continue;
+      }
+      return res;
+    } catch (error) {
+      if (error.name === "TimeoutError" || attempt >= attempts) throw error;
+      await sleep(500 * 2 ** (attempt - 1));
+    }
+  }
+}
+
 /** Send a chat completion request and return the first choice's message. */
 export async function chat(messages, extra = {}) {
   const { baseUrl, apiKey, model } = getConfig();
   const timeoutMs = Number(process.env.LLM_TIMEOUT ?? 300) * 1000;
-  const res = await fetch(`${baseUrl.replace(/\/$/, "")}/chat/completions`, {
+  // Node's built-in fetch also has a fixed 5-minute headers timeout (undici default);
+  // slower generations fail with "fetch failed" regardless of LLM_TIMEOUT.
+  const res = await fetchWithRetry(`${baseUrl.replace(/\/$/, "")}/chat/completions`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
     body: JSON.stringify({ model, messages, ...extra }),
-    signal: AbortSignal.timeout(timeoutMs),
-    // Node's built-in fetch also has a fixed 5-minute headers timeout (undici default);
-    // slower generations fail with "fetch failed" regardless of LLM_TIMEOUT.
-  });
+  }, timeoutMs);
   if (!res.ok) throw new Error(`LLM request failed: ${res.status} ${await res.text()}`);
   const data = await res.json();
   const choice = data.choices[0];
@@ -88,12 +110,11 @@ export async function embed(texts, kind = "document") {
   const vectors = [];
   for (let i = 0; i < texts.length; i += EMBED_BATCH) {
     const input = texts.slice(i, i + EMBED_BATCH).map((t) => prefix + t);
-    const res = await fetch(`${baseUrl.replace(/\/$/, "")}/embeddings`, {
+    const res = await fetchWithRetry(`${baseUrl.replace(/\/$/, "")}/embeddings`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
       body: JSON.stringify({ model, input }),
-      signal: AbortSignal.timeout(timeoutMs),
-    });
+    }, timeoutMs);
     if (!res.ok) throw new Error(`Embeddings request failed: ${res.status} ${await res.text()}`);
     const data = await res.json();
     vectors.push(...data.data.sort((a, b) => a.index - b.index).map((d) => d.embedding));

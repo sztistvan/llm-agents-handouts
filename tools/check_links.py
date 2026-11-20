@@ -42,10 +42,16 @@ def check_arxiv(ids):
     return None
 
 
-def check_http(url):
-    r = subprocess.run(["curl", "-s", "-o", os.devnull, "-L", "-m", "45", "-w", "%{http_code}", "-A", "Mozilla/5.0", url],
-                       capture_output=True, text=True)
-    return r.stdout.strip() == "200"
+def check_http(url, attempts=3):
+    """True if the page answers 200. A failure is retried (with a pause) before it counts: sites rate-limit
+    and networks blip, and a checker that reports false failures stops being trusted."""
+    for attempt in range(attempts):
+        r = subprocess.run(["curl", "-s", "-o", os.devnull, "-L", "-m", "45", "-w", "%{http_code}", "-A", "Mozilla/5.0", url],
+                           capture_output=True, text=True)
+        if r.stdout.strip() == "200":
+            return True
+        time.sleep(3 * (attempt + 1))
+    return False
 
 
 def main():
