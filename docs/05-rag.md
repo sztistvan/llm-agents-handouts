@@ -89,6 +89,23 @@ You do not embed whole documents: a vector of a 40-page document blurs everythin
 - headings inside code blocks are not headings, and diagrams (mermaid) are dropped as noise;
 - every chunk keeps its **section path**, for example `Module 3: Agent Patterns > 8. Reflection > Reflection vs. evaluator-optimizer`. The path is prepended to the text that is embedded and keyword-indexed (a "contextual header"), so a short chunk still knows where it belongs, and it is shown in the citation.
 
+**What a chunk carries.** The chunk is the unit that is searched, cited and (in Module 6) synchronised, so it carries its own address:
+
+```text
+{ "id":         "03-patterns.md#10",        # doc_id + running number within the document
+  "doc_id":     "03-patterns.md",           # which file
+  "section":    "Module 3: Agent Patterns > 8. Reflection > Reflection vs. evaluator-optimizer",
+  "start_line": 191,                        # line of the file where the chunk's first paragraph begins (1-based)
+  "text":       "Both are \"generate, critique, improve\". They differ ...",
+  "hash":       "13eac309e703" }            # fingerprint of section + text: identifies content, not a place
+```
+
+Together `doc_id`, `section` and `start_line` locate the passage in the original: open the file, go to the line. Three details to know:
+
+- `id` is only a running number: it shifts when text is inserted before the chunk. Use `hash` to recognise content and `doc_id` + `start_line` to find it, and remember that both change when the document is edited.
+- `start_line` is the line of the *first paragraph*. A chunk that overlaps its predecessor starts at the repeated paragraph, and diagrams that were dropped from the text still count as lines, so the number matches what an editor shows.
+- There is no end line, page number or character span. Production systems usually add some of them (page for PDFs, a character span to highlight the cited passage, the source URL, the document version) and keep the metadata next to the vector in the store, so a filter or a citation never needs the original file. Adding `end_line` is exercise 7.
+
 The Modules 1-4 handouts give **66 chunks** (median about 660 characters, the longest about 1850). Other strategies exist: fixed-size windows (simple, cuts sentences), sentence or semantic splitting, parent-child (match small chunks, return the larger section) and LLM-written context per chunk. Which is best depends on your documents: measure (section 6).
 
 ## 4. Naive RAG: `m05_rag_basic`
@@ -257,6 +274,7 @@ Retrieval problems are the most common reason a RAG system disappoints; [Seven f
 4. Implement multi-query retrieval: ask the LLM for three rephrasings of the question, search with each, merge the results with `rrf`. Does recall improve?
 5. Run the evaluation with Azure and with LM Studio (`LLM_PROVIDER`). Why does each provider create its own index file?
 6. Give `search_docs` an optional `module` argument (a metadata filter) and let the agent use it.
+7. Add `end_line` to the chunks (Python and JavaScript), and make the citation print `file:start-end`. Which chunks overlap, and what do the overlapping ranges tell you about the chunker?
 
 ## Further reading
 

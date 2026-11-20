@@ -42,20 +42,22 @@ def load_markdown(folder: Path = DOCS_DIR, pattern: str = CORPUS) -> list[dict]:
     return docs
 
 
-def _paragraphs(lines: list[str]) -> list[str]:
-    """Blank-line separated paragraphs; a code block stays in one piece."""
-    paragraphs, current, in_fence = [], [], False
-    for line in lines:
+def _paragraphs(lines: list[str], first_line: int = 1) -> list[tuple[int, str]]:
+    """Blank-line separated paragraphs as (line number of the first line, text); a code block stays in one piece."""
+    paragraphs, current, start, in_fence = [], [], first_line, False
+    for number, line in enumerate(lines, start=first_line):
         if line.strip().startswith("```"):
             in_fence = not in_fence
         if not line.strip() and not in_fence:
             if current:
-                paragraphs.append("\n".join(current))
+                paragraphs.append((start, "\n".join(current)))
                 current = []
         else:
+            if not current:
+                start = number
             current.append(line)
     if current:
-        paragraphs.append("\n".join(current))
+        paragraphs.append((start, "\n".join(current)))
     return paragraphs
 
 
@@ -64,25 +66,29 @@ def chunk_markdown(doc: dict, max_chars: int = 1500, overlap_paragraphs: int = 1
 
     Each chunk keeps its section path ("Module 3: Agent Patterns > 8. Reflection"), which is added to the
     text that is embedded and searched. A section longer than max_chars is split between paragraphs, and
-    consecutive pieces overlap by `overlap_paragraphs`. Diagrams (mermaid) are dropped: they are noise.
+    consecutive pieces overlap by `overlap_paragraphs`. Diagrams (mermaid) are dropped: they are noise. Each chunk
+    records `start_line`: the line of the original file where its first paragraph begins (1-based).
     """
-    text = re.sub(r"```mermaid.*?```", "", doc["text"], flags=re.S)
+    # A diagram is replaced by as many empty lines as it had, so that line numbers stay those of the file.
+    text = re.sub(r"```mermaid.*?```", lambda m: "\n" * m.group().count("\n"), doc["text"], flags=re.S)
     stack: list[tuple[int, str]] = []  # (heading level, heading text)
-    sections: list[tuple[str, list[str]]] = []
+    sections: list[tuple[str, int, list[str]]] = []  # (heading path, line number of the first line, lines)
     lines: list[str] = []
+    first = 1
     in_fence = False
 
     def flush():
         if lines:
-            sections.append((" > ".join(t for _, t in stack) or doc["title"], list(lines)))
+            sections.append((" > ".join(t for _, t in stack) or doc["title"], first, list(lines)))
             lines.clear()
 
-    for line in text.splitlines():
+    for number, line in enumerate(text.splitlines(), start=1):
         if line.strip().startswith("```"):
             in_fence = not in_fence
         heading = None if in_fence else re.match(r"^(#{1,6})\s+(.+?)\s*$", line)
         if heading:
             flush()
+            first = number + 1
             level = len(heading.group(1))
             while stack and stack[-1][0] >= level:
                 stack.pop()
@@ -93,16 +99,16 @@ def chunk_markdown(doc: dict, max_chars: int = 1500, overlap_paragraphs: int = 1
 
     chunks: list[dict] = []
 
-    def emit(path: str, paragraphs: list[str]):
-        body = "\n\n".join(paragraphs).strip()
+    def emit(path: str, paragraphs: list[tuple[int, str]]):
+        body = "\n\n".join(text for _, text in paragraphs).strip()
         if len(body) >= min_chars:
-            chunks.append({"id": f"{doc['doc_id']}#{len(chunks)}", "doc_id": doc["doc_id"],
-                           "section": path, "text": body, "hash": sha(path + "\n" + body)})
+            chunks.append({"id": f"{doc['doc_id']}#{len(chunks)}", "doc_id": doc["doc_id"], "section": path,
+                           "start_line": paragraphs[0][0], "text": body, "hash": sha(path + "\n" + body)})
 
-    for path, section_lines in sections:
-        current: list[str] = []
-        for paragraph in _paragraphs(section_lines):
-            if current and len("\n\n".join(current + [paragraph])) > max_chars:
+    for path, first_line, section_lines in sections:
+        current: list[tuple[int, str]] = []
+        for paragraph in _paragraphs(section_lines, first_line):
+            if current and len("\n\n".join(t for _, t in current + [paragraph])) > max_chars:
                 emit(path, current)
                 current = current[-overlap_paragraphs:] if overlap_paragraphs else []
             current.append(paragraph)

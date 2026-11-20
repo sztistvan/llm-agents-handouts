@@ -31,20 +31,22 @@ export function loadMarkdown(folder = DOCS_DIR, pattern = CORPUS) {
   });
 }
 
-/** Blank-line separated paragraphs; a code block stays in one piece. */
-function paragraphs(lines) {
+/** Blank-line separated paragraphs as [line number of the first line, text]; a code block stays in one piece. */
+function paragraphs(lines, firstLine = 1) {
   const result = [];
   let current = [];
+  let start = firstLine;
   let inFence = false;
-  for (const line of lines) {
+  lines.forEach((line, index) => {
     if (line.trim().startsWith("```")) inFence = !inFence;
     if (!line.trim() && !inFence) {
-      if (current.length) { result.push(current.join("\n")); current = []; }
+      if (current.length) { result.push([start, current.join("\n")]); current = []; }
     } else {
+      if (!current.length) start = firstLine + index;
       current.push(line);
     }
-  }
-  if (current.length) result.push(current.join("\n"));
+  });
+  if (current.length) result.push([start, current.join("\n")]);
   return result;
 }
 
@@ -52,25 +54,29 @@ function paragraphs(lines) {
  * Split a markdown document by its headings (structure-aware chunking).
  * Each chunk keeps its section path ("Module 3: Agent Patterns > 8. Reflection"), which is added to the text
  * that is embedded and searched. A section longer than maxChars is split between paragraphs, and consecutive
- * pieces overlap by `overlapParagraphs`. Diagrams (mermaid) are dropped: they are noise.
+ * pieces overlap by `overlapParagraphs`. Diagrams (mermaid) are dropped: they are noise. Each chunk records
+ * `start_line`: the line of the original file where its first paragraph begins (1-based).
  */
 export function chunkMarkdown(doc, { maxChars = 1500, overlapParagraphs = 1, minChars = 40 } = {}) {
-  const text = doc.text.replace(/```mermaid[\s\S]*?```/g, "");
+  // A diagram is replaced by as many empty lines as it had, so that line numbers stay those of the file.
+  const text = doc.text.replace(/```mermaid[\s\S]*?```/g, (m) => "\n".repeat(m.split("\n").length - 1));
   const stack = []; // [heading level, heading text]
-  const sections = []; // [path, lines]
+  const sections = []; // [path, line number of the first line, lines]
   let lines = [];
+  let first = 1;
   let inFence = false;
   const flush = () => {
     if (lines.length) {
-      sections.push([stack.map(([, t]) => t).join(" > ") || doc.title, lines]);
+      sections.push([stack.map(([, t]) => t).join(" > ") || doc.title, first, lines]);
       lines = [];
     }
   };
-  for (const line of text.split("\n")) {
+  for (const [index, line] of text.split("\n").entries()) {
     if (line.trim().startsWith("```")) inFence = !inFence;
     const heading = inFence ? null : line.match(/^(#{1,6})\s+(.+?)\s*$/);
     if (heading) {
       flush();
+      first = index + 2;
       const level = heading[1].length;
       while (stack.length && stack[stack.length - 1][0] >= level) stack.pop();
       stack.push([level, heading[2]]);
@@ -82,15 +88,15 @@ export function chunkMarkdown(doc, { maxChars = 1500, overlapParagraphs = 1, min
 
   const chunks = [];
   const emit = (path, paras) => {
-    const body = paras.join("\n\n").trim();
+    const body = paras.map(([, t]) => t).join("\n\n").trim();
     if (body.length >= minChars) {
-      chunks.push({ id: `${doc.doc_id}#${chunks.length}`, doc_id: doc.doc_id, section: path, text: body, hash: sha(`${path}\n${body}`) });
+      chunks.push({ id: `${doc.doc_id}#${chunks.length}`, doc_id: doc.doc_id, section: path, start_line: paras[0][0], text: body, hash: sha(`${path}\n${body}`) });
     }
   };
-  for (const [path, sectionLines] of sections) {
+  for (const [path, firstLine, sectionLines] of sections) {
     let current = [];
-    for (const paragraph of paragraphs(sectionLines)) {
-      if (current.length && [...current, paragraph].join("\n\n").length > maxChars) {
+    for (const paragraph of paragraphs(sectionLines, firstLine)) {
+      if (current.length && [...current, paragraph].map(([, t]) => t).join("\n\n").length > maxChars) {
         emit(path, current);
         current = overlapParagraphs ? current.slice(-overlapParagraphs) : [];
       }
