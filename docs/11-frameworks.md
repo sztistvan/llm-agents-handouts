@@ -256,4 +256,4 @@ Questions to ask before picking, in the order that usually matters:
 - Choosing: Anthropic, [*Building effective agents*](https://www.anthropic.com/engineering/building-effective-agents)
 - Evidence: [Stack Overflow Developer Survey 2025, AI section](https://survey.stackoverflow.co/2025/ai); LangChain, [*State of Agent Engineering*](https://www.langchain.com/state-of-agent-engineering); download statistics at [pypistats.org](https://pypistats.org)
 
-**Next:** Module 12: Best practices (coming next)
+**Next:** [Module 12: Best practices](12-best-practices.md)

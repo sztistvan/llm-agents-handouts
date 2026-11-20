@@ -152,7 +152,7 @@ What **runs agents in production**: durable execution, streaming, persistence, p
 
 ### Harness
 
-The **software layer that runs an agent session**: it connects the model to context and tools, runs the [agent loop](#agent-loop), applies permissions and approvals, manages context and keeps the conversation state. VS Code's documentation defines it this way ([agent harnesses](https://code.visualstudio.com/docs/agents/concepts/agent-harnesses)) and says that the model decides what to request while the harness coordinates the system that carries it out. In this course's terms, the tiny `agent.py` loop plus the approval gate of [Module 10](10-tools-mcp.md) is a harness in miniature; coding assistants such as the Copilot agent in VS Code and Claude Code are full ones.
+The **software layer that runs an agent session**: it connects the model to context and tools, runs the [agent loop](#agent-loop), applies permissions and approvals, manages context and keeps the conversation state. VS Code's documentation defines it this way ([agent harnesses](https://code.visualstudio.com/docs/agents/concepts/agent-harnesses)) and says that the model decides what to request while the harness coordinates the system that carries it out. In this course's terms, the `guard.py` loop of [Module 12](12-best-practices.md) (budgets, a permission gate, an audit trail, a trace) is a harness in miniature; coding assistants such as the Copilot agent in VS Code and Claude Code are full ones.
 
 **Used differently elsewhere.** The word is newer and less settled than "framework":
 

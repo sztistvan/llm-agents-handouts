@@ -59,6 +59,11 @@ async function fetchWithRetry(url, init, timeoutMs, attempts = 3) {
 
 /** Send a chat completion request and return the first choice's message. */
 export async function chat(messages, extra = {}) {
+  return (await chatFull(messages, extra)).message;
+}
+
+/** Like chat(), but also return the usage of the request: { message, usage } with usage an object of token counts. */
+export async function chatFull(messages, extra = {}) {
   const { baseUrl, apiKey, model } = getConfig();
   const timeoutMs = Number(process.env.LLM_TIMEOUT ?? 300) * 1000;
   // Node's built-in fetch also has a fixed 5-minute headers timeout (undici default);
@@ -76,7 +81,7 @@ export async function chat(messages, extra = {}) {
       "Empty reply: the token limit was hit before any answer. " +
       "Reasoning models do this; load a non-reasoning model or raise max_tokens.");
   }
-  return choice.message;
+  return { message: choice.message, usage: data.usage ?? {} };
 }
 
 const EMBED_BATCH = 64; // texts per embeddings request

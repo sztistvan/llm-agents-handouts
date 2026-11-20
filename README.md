@@ -85,7 +85,7 @@ Terms such as *agent*, *workflow*, *agent loop*, *framework* and *harness* are u
 | 10 | [Tools & MCP](docs/10-tools-mcp.md) | Designing tools, many tools (cost, shortlists, overlapping tools), the Model Context Protocol (a tiny server and client by hand), tool poisoning and defences |
 | 10a | [MCP in practice](docs/10a-mcp-in-practice.md) | Adding, checking and reviewing MCP servers in Claude Desktop, the GitHub Copilot app and VS Code; useful servers (GitHub, Context7, Microsoft Learn, Playwright); using them safely |
 | 11 | [Frameworks](docs/11-frameworks.md) | The same supervisor in the course's own code, LangChain, LangGraph, the OpenAI Agents SDK, Pydantic AI and (as code to read) CrewAI; what is known about production use; how to choose, including using none |
-| 12 | Best practices *(planned)* | Simplicity, guardrails, evaluation, observability, cost/latency, security (prompt injection), human-in-the-loop |
+| 12 | [Best practices](docs/12-best-practices.md) | Staying simple, a guarded loop (budgets, permissions, audit trail, trace), guardrails and what they can and cannot do, human approval, security (OWASP, the lethal trifecta), evaluating agents (tasks, trials, pass@k), observability, cost and latency (prompt caching) |
 | 13 | Capstone examples *(planned)* | Research assistant; coding/file helper |
 
 ### How Modules 5 to 7 fit together
@@ -114,7 +114,8 @@ examples/js/          framework-agnostic JavaScript; same file names (.mjs)
                       kb (a knowledge base that changes: sync, versions, deletions, safe releases),
                       graph_store (knowledge graph: LLM extraction with provenance, local and global search),
                       memory (short-term trim/summarize, long-term memory store, facts with history),
-                      mcp_client (a minimal MCP client: start a server, list and call its tools as Tool objects)
+                      mcp_client (a minimal MCP client: start a server, list and call its tools as Tool objects),
+                      guard (the agent loop with budgets, a permission gate, an audit trail and a trace)
                       lessons (mNN_ prefix): one runnable example per topic, run from the project root
 examples/rag_golden.json   the golden question set of the retrieval evaluation (Module 5)
 examples/graph_golden.json multi-hop questions for the GraphRAG comparison (Module 7)
@@ -142,7 +143,8 @@ requirements.txt      Python dependencies (JavaScript needs none)
 - [x] Module 10: [Tools & MCP](docs/10-tools-mcp.md)
 - [x] Module 10a: [MCP in practice](docs/10a-mcp-in-practice.md)
 - [x] Module 11: [Frameworks](docs/11-frameworks.md)
-- [ ] Modules 12-13 (next: Best practices)
+- [x] Module 12: [Best practices](docs/12-best-practices.md)
+- [ ] Module 13 (next: Capstone examples)
 
 ## Further reading and link check
 

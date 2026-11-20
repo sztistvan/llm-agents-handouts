@@ -67,8 +67,8 @@ def get_client() -> tuple[OpenAI, str]:
     return client, cfg["model"]
 
 
-def chat(messages: list[dict], **kwargs):
-    """Send a chat completion request and return the first choice's message."""
+def chat_full(messages: list[dict], **kwargs):
+    """Like chat(), but also return the usage of the request: (message, usage) with usage a dict of token counts."""
     client, model = get_client()
     response = client.chat.completions.create(model=model, messages=messages, **kwargs)
     choice = response.choices[0]
@@ -77,7 +77,12 @@ def chat(messages: list[dict], **kwargs):
             "Empty reply: the token limit was hit before any answer. "
             "Reasoning models do this; load a non-reasoning model or raise max_tokens."
         )
-    return choice.message
+    return choice.message, (response.usage.model_dump() if response.usage else {})
+
+
+def chat(messages: list[dict], **kwargs):
+    """Send a chat completion request and return the first choice's message."""
+    return chat_full(messages, **kwargs)[0]
 
 
 EMBED_BATCH = 64  # texts per embeddings request
