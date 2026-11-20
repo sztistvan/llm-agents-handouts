@@ -77,7 +77,7 @@ The provider switch works the same way (`$env:LLM_PROVIDER = "lmstudio"` in Powe
 | 4 | Multi-agent structures | Supervisor, hierarchical, swarm/handoff, debate and critic |
 | 5 | [RAG](docs/05-rag.md) | Embeddings, chunking, hybrid search, reranking, evaluating recall, agentic RAG |
 | 6 | [Knowledge bases](docs/06-knowledge-bases.md) | Incremental sync, versions, deletions, safe index releases, embedding-model changes, recall at scale, permissions |
-| 7 | GraphRAG *(planned)* | Entities and relations from text, local and global search, multi-hop questions, cost and quality, updates |
+| 7 | [GraphRAG](docs/07-graphrag.md) | Entities and relations from text, entity resolution, local and global search, an honest comparison with plain RAG, cost, updates |
 | 8 | Memory *(planned)* | Short-term (trimming, summaries), long-term (remember/recall), knowledge-graph memory; production issues |
 | 9 | Tools & MCP *(planned)* | Scaling tool sets, the Model Context Protocol (a tiny server and client), security |
 | 10 | Frameworks landscape *(planned)* | LangGraph, OpenAI Agents SDK, AutoGen, CrewAI, Semantic Kernel; when to use none |
@@ -107,9 +107,11 @@ examples/js/          framework-agnostic JavaScript; same file names (.mjs)
                       shared building blocks (no prefix): llm_client (talk to the model, embeddings),
                       agent (the agent loop: Tool, run_agent / runAgent),
                       retrieval (chunking, vector store, BM25, hybrid search), rag (cited answers, reranking),
-                      kb (a knowledge base that changes: sync, versions, deletions, safe releases)
+                      kb (a knowledge base that changes: sync, versions, deletions, safe releases),
+                      graph_store (knowledge graph: LLM extraction with provenance, local and global search)
                       lessons (mNN_ prefix): one runnable example per topic, run from the project root
 examples/rag_golden.json   the golden question set of the retrieval evaluation (Module 5)
+examples/graph_golden.json multi-hop questions for the GraphRAG comparison (Module 7)
 examples/langgraph/   LangGraph examples (planned, Module 10)
 requirements.txt      Python dependencies (JavaScript needs none)
 .env.example          backend settings template: copy to .env
@@ -126,7 +128,8 @@ requirements.txt      Python dependencies (JavaScript needs none)
 - [x] Module 4: [Multi-agent structures](docs/04-multi-agent.md)
 - [x] Module 5: [RAG](docs/05-rag.md)
 - [x] Module 6: [Knowledge bases](docs/06-knowledge-bases.md)
-- [ ] Modules 7-12 (next: GraphRAG)
+- [x] Module 7: [GraphRAG](docs/07-graphrag.md)
+- [ ] Modules 8-12 (next: Memory)
 
 ## Further reading and link check
 

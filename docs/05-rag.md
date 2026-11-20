@@ -3,7 +3,7 @@
 **Goal:** give an LLM access to knowledge that is not in its weights, with sources you can check, and learn how to measure and improve retrieval.
 **Time:** ~40 min. **Prerequisites:** [Module 2](02-building-blocks.md) (the agent loop and tools are reused; embeddings are new).
 
-This is the first of three modules on knowledge: **RAG** (this module: finding the right text and answering from it), [**Knowledge bases**](06-knowledge-bases.md) (keeping it working as documents change and grow) and **GraphRAG** (Module 7: questions whose answers live in the relations between documents). How they relate: see the [overview in the README](../README.md#how-modules-5-to-7-fit-together).
+This is the first of three modules on knowledge: **RAG** (this module: finding the right text and answering from it), [**Knowledge bases**](06-knowledge-bases.md) (keeping it working as documents change and grow) and [**GraphRAG**](07-graphrag.md) (questions whose answers live in the relations between documents). How they relate: see the [overview in the README](../README.md#how-modules-5-to-7-fit-together).
 
 ## Setup: an embedding model
 
@@ -221,7 +221,7 @@ Use naive RAG when every question needs the knowledge, and agentic RAG when retr
 Two situations push plain RAG past its limits, and each has its own module:
 
 - **The documents change and the corpus grows.** Here the index was built once from fixed handouts. A real knowledge base needs updates by content hash, versions, deletions, safe index releases and recall that survives growth: [Module 6](06-knowledge-bases.md).
-- **The answer lives in the relations between documents**, not in any single chunk. "Which patterns from Module 3 does the supervisor of Module 4 build on?" needs pieces from two handouts that no single chunk contains. GraphRAG extracts entities and relations to answer such multi-hop questions: Module 7.
+- **The answer lives in the relations between documents**, not in any single chunk. "Which patterns from Module 3 does the supervisor of Module 4 build on?" needs pieces from two handouts that no single chunk contains. GraphRAG extracts entities and relations to answer such multi-hop questions: [Module 7](07-graphrag.md).
 
 ## From tutorial to production
 

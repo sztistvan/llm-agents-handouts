@@ -21,12 +21,14 @@ def format_sources(hits: list[tuple[float, dict]], max_chars: int = 1200) -> str
         for n, (_, chunk) in enumerate(hits, start=1))
 
 
-def answer_with_sources(question: str, hits: list[tuple[float, dict]], system: str = ANSWER_SYSTEM) -> str:
-    """Augment and generate: put the sources in the prompt and answer from them only."""
+def answer_with_sources(question: str, hits: list[tuple[float, dict]], system: str = ANSWER_SYSTEM, facts: str = "") -> str:
+    """Augment and generate: put the sources in the prompt and answer from them only.
+    `facts` (optional): extra lines from a knowledge graph (Module 7), shown before the question."""
     if not hits:
         return "I do not know based on the handouts (nothing relevant was found)."
+    graph = f"Graph facts (relations between the entities in the sources):\n{facts}\n\n" if facts else ""
     messages = [{"role": "system", "content": system},
-                {"role": "user", "content": f"Sources:\n{format_sources(hits)}\n\nQuestion: {question}"}]
+                {"role": "user", "content": f"Sources:\n{format_sources(hits)}\n\n{graph}Question: {question}"}]
     return (chat(messages, temperature=0.2).content or "").strip()
 
 

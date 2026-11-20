@@ -219,13 +219,15 @@ export class Retriever {
     this.chunks = chunks;
     this.store = store;
     this.bm25 = new BM25(chunks);
+    this.queryVectors = new Map(); // the same question is often searched more than once
   }
 
   /** mode: 'dense' (embeddings), 'bm25' (keywords) or 'hybrid' (both, merged with RRF).
    *  For hybrid, each method contributes its top `pool` results before merging. */
   async search(query, k = 5, { mode = "hybrid", where = null, pool = 30 } = {}) {
     if (mode === "bm25" || !this.store) return this.bm25.search(query, k, where); // no embeddings: keywords only
-    const [queryVector] = await embed([query], "query");
+    if (!this.queryVectors.has(query)) this.queryVectors.set(query, (await embed([query], "query"))[0]);
+    const queryVector = this.queryVectors.get(query);
     if (mode === "dense") return this.store.search(queryVector, k, where);
     const dense = this.store.search(queryVector, pool, where);
     const sparse = this.bm25.search(query, pool, where);

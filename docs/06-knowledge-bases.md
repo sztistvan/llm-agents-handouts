@@ -3,7 +3,7 @@
 **Goal:** keep a RAG system correct and fast as its documents change, are replaced and deleted, and as the corpus grows, and release index changes safely.
 **Time:** ~30 min. **Prerequisites:** [Module 5](05-rag.md) (chunks, the retriever, hybrid search and the golden set are reused here).
 
-How this module relates to RAG (Module 5) and GraphRAG (Module 7): see the [overview in the README](../README.md#how-modules-5-to-7-fit-together).
+How this module relates to RAG (Module 5) and [GraphRAG](07-graphrag.md) (Module 7): see the [overview in the README](../README.md#how-modules-5-to-7-fit-together).
 
 The index of Module 5 is built once. A real **knowledge base** lives for years: documents are edited, new versions replace old ones, some must disappear, the corpus grows from hundreds to millions of chunks, and one day the embedding model changes. Two lessons cover this: `m06_kb_update` (the lifecycle) and `m06_kb_scale` (growth), on top of a shared building block, [`kb.py`](../examples/python/kb.py) / [`kb.mjs`](../examples/js/kb.mjs).
 
@@ -75,7 +75,7 @@ A deleted document is first *hidden* (its chunks get a `valid_to`), which is why
    as of day 25 now:             -> NOT FOUND in the top 3 chunks
 ```
 
-(A search always returns *something*, so the lesson checks the content of the top results, not whether the list is empty.) In production the content must also leave every place derived from it: the keyword index, embedding and result caches, logs, backups, evaluation sets and, with GraphRAG (Module 7), the entities and relations extracted from it. Verify by searching for the deleted text.
+(A search always returns *something*, so the lesson checks the content of the top results, not whether the list is empty.) In production the content must also leave every place derived from it: the keyword index, embedding and result caches, logs, backups, evaluation sets and, with GraphRAG ([Module 7](07-graphrag.md#8-keeping-the-graph-up-to-date)), the entities and relations extracted from it. Verify by searching for the deleted text.
 
 ## 5. Releasing safely: generations and a validation gate
 
@@ -176,4 +176,4 @@ The examples are small on purpose. What changes with a real knowledge base, and 
 - Scaling the search: Malkov and Yashunin, [*Efficient and robust approximate nearest neighbor search using Hierarchical Navigable Small World graphs*](https://arxiv.org/abs/1603.09320) (HNSW, 2016); Johnson et al., [*Billion-scale similarity search with GPUs*](https://arxiv.org/abs/1702.08734) (the FAISS paper, 2017); [FAISS](https://github.com/facebookresearch/faiss), [pgvector](https://github.com/pgvector/pgvector), [Qdrant](https://qdrant.tech/documentation/) and [Azure AI Search vector search](https://learn.microsoft.com/en-us/azure/search/vector-search-overview)
 - Choosing and tuning an index: the FAISS wiki pages [*Faiss indexes*](https://github.com/facebookresearch/faiss/wiki/Faiss-indexes) and [*Indexing 1M vectors*](https://github.com/facebookresearch/faiss/wiki/Indexing-1M-vectors), and [ANN-Benchmarks](https://ann-benchmarks.com/) for the recall-versus-speed curves of many libraries
 
-**Next:** Module 7: GraphRAG (coming next)
+**Next:** [Module 7: GraphRAG](07-graphrag.md)

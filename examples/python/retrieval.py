@@ -209,13 +209,16 @@ class Retriever:
 
     def __init__(self, chunks: list[dict], store: VectorStore | None = None):
         self.chunks, self.store, self.bm25 = chunks, store, BM25(chunks)
+        self._query_vectors: dict[str, list[float]] = {}  # the same question is often searched more than once
 
     def search(self, query: str, k: int = 5, mode: str = "hybrid", where=None, pool: int = 30) -> list[tuple[float, dict]]:
         """mode: 'dense' (embeddings), 'bm25' (keywords) or 'hybrid' (both, merged with RRF).
         For hybrid, each method contributes its top `pool` results before merging."""
         if mode == "bm25" or self.store is None:  # no embeddings available: keywords only
             return self.bm25.search(query, k, where)
-        query_vector = embed([query], kind="query")[0]
+        if query not in self._query_vectors:
+            self._query_vectors[query] = embed([query], kind="query")[0]
+        query_vector = self._query_vectors[query]
         if mode == "dense":
             return self.store.search(query_vector, k, where)
         dense = self.store.search(query_vector, pool, where)

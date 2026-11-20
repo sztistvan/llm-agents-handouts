@@ -13,10 +13,12 @@ export const formatSources = (hits, maxChars = 1200) =>
   hits.map(([, chunk], i) => `[${i + 1}] ${chunk.doc_id} > ${chunk.section}\n${chunk.text.slice(0, maxChars)}`).join("\n\n");
 
 /** Augment and generate: put the sources in the prompt and answer from them only. */
-export async function answerWithSources(question, hits, system = ANSWER_SYSTEM) {
+export async function answerWithSources(question, hits, system = ANSWER_SYSTEM, facts = "") {
   if (!hits.length) return "I do not know based on the handouts (nothing relevant was found).";
+  // `facts` (optional): extra lines from a knowledge graph (Module 7), shown before the question.
+  const graph = facts ? `Graph facts (relations between the entities in the sources):\n${facts}\n\n` : "";
   const messages = [{ role: "system", content: system },
-    { role: "user", content: `Sources:\n${formatSources(hits)}\n\nQuestion: ${question}` }];
+    { role: "user", content: `Sources:\n${formatSources(hits)}\n\n${graph}Question: ${question}` }];
   return ((await chat(messages, { temperature: 0.2 })).content ?? "").trim();
 }
 
