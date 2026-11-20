@@ -1,0 +1,11 @@
+# Optional extras for Module 11 (frameworks). Install in their OWN virtual environment, never into the course's main one:
+#   python -m venv examples/frameworks/.venv
+#   examples/frameworks/.venv/Scripts/python -m pip install -r examples/frameworks/requirements.txt     (Windows)
+# These ranges were tested with the versions in docs/11-frameworks.md; frameworks change their API often, so pin what you use.
+# CrewAI is deliberately NOT here: f05_crewai.py is code to read, not to run.
+openai>=1.40
+langchain>=1.5
+langchain-openai>=1.8
+langgraph>=1.2
+openai-agents>=0.25
+pydantic-ai-slim[openai]>=2.71

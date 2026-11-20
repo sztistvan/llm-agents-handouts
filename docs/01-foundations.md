@@ -44,6 +44,8 @@ flowchart TB
 
 **Rule of thumb:** use the least autonomy that solves the problem. Start with a single LLM call, then a workflow, and only then an agent.
 
+Words such as *agentic*, *agent loop*, *orchestration* and *harness* are used differently by different vendors: see the [glossary](glossary.md).
+
 ## 3. A short history
 
 ```mermaid

@@ -69,6 +69,8 @@ The provider switch works the same way (`$env:LLM_PROVIDER = "lmstudio"` in Powe
 
 ## Course outline
 
+Terms such as *agent*, *workflow*, *agent loop*, *framework* and *harness* are used differently by different sources: the [glossary](docs/glossary.md) defines them and marks where vendors disagree.
+
 | # | Module | Topics |
 |---|---|---|
 | 1 | [Foundations & history](docs/01-foundations.md) | Symbolic agents, expert systems, RL agents, ReAct, function calling, modern SDKs; agent vs. chatbot vs. workflow |
@@ -82,7 +84,7 @@ The provider switch works the same way (`$env:LLM_PROVIDER = "lmstudio"` in Powe
 | 9 | [Memory](docs/09-memory.md) | Short-term (trim, summarize, persist), long-term (remember/recall/forget, reconcile on write, automatic extraction), facts with history, production issues (privacy, isolation, poisoning) |
 | 10 | [Tools & MCP](docs/10-tools-mcp.md) | Designing tools, many tools (cost, shortlists, overlapping tools), the Model Context Protocol (a tiny server and client by hand), tool poisoning and defences |
 | 10a | [MCP in practice](docs/10a-mcp-in-practice.md) | Adding, checking and reviewing MCP servers in Claude Desktop, the GitHub Copilot app and VS Code; useful servers (GitHub, Context7, Microsoft Learn, Playwright); using them safely |
-| 11 | Frameworks landscape *(planned)* | LangGraph, OpenAI Agents SDK, AutoGen, CrewAI, Semantic Kernel; when to use none |
+| 11 | [Frameworks](docs/11-frameworks.md) | The same supervisor in the course's own code, LangChain, LangGraph, the OpenAI Agents SDK, Pydantic AI and (as code to read) CrewAI; what is known about production use; how to choose, including using none |
 | 12 | Best practices *(planned)* | Simplicity, guardrails, evaluation, observability, cost/latency, security (prompt injection), human-in-the-loop |
 | 13 | Capstone examples *(planned)* | Research assistant; coding/file helper |
 
@@ -118,7 +120,7 @@ examples/rag_golden.json   the golden question set of the retrieval evaluation (
 examples/graph_golden.json multi-hop questions for the GraphRAG comparison (Module 7)
 examples/tools_catalog.json 36 office tools and 12 questions for the tool-selection experiment (Module 10)
 examples/ontology.json     a small ontology for the handouts: classes, taxonomy, relations with domain and range (Module 7)
-examples/langgraph/   LangGraph examples (planned, Module 11)
+examples/frameworks/  the framework comparison of Module 11 (Python only, own requirements and virtual environment)
 requirements.txt      Python dependencies (JavaScript needs none)
 .env.example          backend settings template: copy to .env
 ```
@@ -139,7 +141,8 @@ requirements.txt      Python dependencies (JavaScript needs none)
 - [x] Module 9: [Memory](docs/09-memory.md)
 - [x] Module 10: [Tools & MCP](docs/10-tools-mcp.md)
 - [x] Module 10a: [MCP in practice](docs/10a-mcp-in-practice.md)
-- [ ] Modules 11-13 (next: Frameworks landscape)
+- [x] Module 11: [Frameworks](docs/11-frameworks.md)
+- [ ] Modules 12-13 (next: Best practices)
 
 ## Further reading and link check
 

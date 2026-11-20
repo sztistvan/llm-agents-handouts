@@ -249,4 +249,4 @@ Playwright's own documentation states that it is not a security boundary, and th
 - VS Code: [MCP servers](https://code.visualstudio.com/docs/copilot/customization/mcp-servers), [manage MCP servers](https://code.visualstudio.com/docs/agents/run/manage-mcp-servers), [configuration reference](https://code.visualstudio.com/docs/agents/reference/mcp-configuration), [approvals](https://code.visualstudio.com/docs/agents/run/approvals)
 - Tools and catalogues: the [MCP Inspector](https://github.com/modelcontextprotocol/inspector), the [MCP Registry](https://registry.modelcontextprotocol.io), the [reference servers](https://github.com/modelcontextprotocol/servers), [Playwright MCP](https://github.com/microsoft/playwright-mcp), the [Azure MCP server](https://github.com/microsoft/mcp)
 
-**Next:** Module 11: Frameworks landscape (coming next)
+**Next:** [Module 11: Frameworks](11-frameworks.md)
