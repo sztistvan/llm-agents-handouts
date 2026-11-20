@@ -78,11 +78,12 @@ The provider switch works the same way (`$env:LLM_PROVIDER = "lmstudio"` in Powe
 | 5 | [RAG](docs/05-rag.md) | Embeddings, chunking, hybrid search, reranking, evaluating recall, agentic RAG |
 | 6 | [Knowledge bases](docs/06-knowledge-bases.md) | Incremental sync, versions, deletions, safe index releases, embedding-model changes, recall at scale, permissions |
 | 7 | [GraphRAG](docs/07-graphrag.md) | Knowledge graph vs taxonomy vs ontology, entities and relations from text, entity resolution, local and global search, an honest comparison with plain RAG, updates, graph databases (Neo4j, FalkorDB, Memgraph, PostgreSQL) |
-| 8 | Memory *(planned)* | Short-term (trimming, summaries), long-term (remember/recall), knowledge-graph memory; production issues |
-| 9 | Tools & MCP *(planned)* | Scaling tool sets, the Model Context Protocol (a tiny server and client), security |
-| 10 | Frameworks landscape *(planned)* | LangGraph, OpenAI Agents SDK, AutoGen, CrewAI, Semantic Kernel; when to use none |
-| 11 | Best practices *(planned)* | Simplicity, guardrails, evaluation, observability, cost/latency, security (prompt injection), human-in-the-loop |
-| 12 | Capstone examples *(planned)* | Research assistant; coding/file helper |
+| 8 | [Graph databases](docs/08-graph-databases.md) | Where the graph lives in production: what a store must do, property graph vs RDF, Cypher/GQL, Neo4j vs FalkorDB vs Memgraph vs PostgreSQL, how to choose and migrate |
+| 9 | Memory *(planned)* | Short-term (trimming, summaries), long-term (remember/recall), knowledge-graph memory; production issues |
+| 10 | Tools & MCP *(planned)* | Scaling tool sets, the Model Context Protocol (a tiny server and client), security |
+| 11 | Frameworks landscape *(planned)* | LangGraph, OpenAI Agents SDK, AutoGen, CrewAI, Semantic Kernel; when to use none |
+| 12 | Best practices *(planned)* | Simplicity, guardrails, evaluation, observability, cost/latency, security (prompt injection), human-in-the-loop |
+| 13 | Capstone examples *(planned)* | Research assistant; coding/file helper |
 
 ### How Modules 5 to 7 fit together
 
@@ -95,7 +96,7 @@ Modules 5 to 7 all deal with giving an agent knowledge it was not trained on. Th
 | **Practical issues** | Chunking pitfalls, similarity thresholds per model, a small golden set, injection through documents | Hash-based change detection, version policy, purging for compliance, rollback, rebuild cost, recall lost to approximate search, permissions | Extraction cost (one LLM call per chunk) and quality with small models, duplicate entities, provenance back to chunks, community summaries, updates, hard evaluation |
 | **Production checklist focuses on** | Retrieval quality | Operations | Cost and complexity |
 
-Read them in this order: Module 6 builds on the retriever and the golden set of Module 5, and GraphRAG's hardest part, keeping the graph up to date, reuses the sync and provenance ideas of Module 6. You can skip Module 7 without losing the thread.
+Read them in this order: Module 6 builds on the retriever and the golden set of Module 5, and GraphRAG's hardest part, keeping the graph up to date, reuses the sync and provenance ideas of Module 6. You can skip Module 7 without losing the thread. [Module 8](docs/08-graph-databases.md) is the production companion of Module 7 (where the graph is stored); read it when you take a GraphRAG system towards production.
 
 ## Layout
 
@@ -112,7 +113,7 @@ examples/js/          framework-agnostic JavaScript; same file names (.mjs)
                       lessons (mNN_ prefix): one runnable example per topic, run from the project root
 examples/rag_golden.json   the golden question set of the retrieval evaluation (Module 5)
 examples/graph_golden.json multi-hop questions for the GraphRAG comparison (Module 7)
-examples/langgraph/   LangGraph examples (planned, Module 10)
+examples/langgraph/   LangGraph examples (planned, Module 11)
 requirements.txt      Python dependencies (JavaScript needs none)
 .env.example          backend settings template: copy to .env
 ```
@@ -129,7 +130,8 @@ requirements.txt      Python dependencies (JavaScript needs none)
 - [x] Module 5: [RAG](docs/05-rag.md)
 - [x] Module 6: [Knowledge bases](docs/06-knowledge-bases.md)
 - [x] Module 7: [GraphRAG](docs/07-graphrag.md)
-- [ ] Modules 8-12 (next: Memory)
+- [x] Module 8: [Graph databases](docs/08-graph-databases.md)
+- [ ] Modules 9-13 (next: Memory)
 
 ## Further reading and link check
 

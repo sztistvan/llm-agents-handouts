@@ -251,6 +251,6 @@ flowchart TD
 - Shinn et al., [*Reflexion: Language Agents with Verbal Reinforcement Learning*](https://arxiv.org/abs/2303.11366) (2023): reflection with memory across attempts
 - Madaan et al., [*Self-Refine: Iterative Refinement with Self-Feedback*](https://arxiv.org/abs/2303.17651) (2023): the same model generates, critiques and revises
 - Wang et al., [*Self-Consistency Improves Chain of Thought Reasoning*](https://arxiv.org/abs/2203.11171) (2022): voting over several answers
-- LangChain, [*Workflows and agents*](https://docs.langchain.com/oss/python/langgraph/workflows-agents): the same patterns as LangGraph code (a preview of Module 10)
+- LangChain, [*Workflows and agents*](https://docs.langchain.com/oss/python/langgraph/workflows-agents): the same patterns as LangGraph code (a preview of Module 11)
 
 **Next:** [Module 4: Multi-agent structures](04-multi-agent.md)
