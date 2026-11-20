@@ -122,7 +122,7 @@ flowchart TB
 |---|---|---|
 | Short-term | Message list | Keep recent turns; trim or summarize old ones |
 | Working state | Variables / scratchpad | Plans, to-do lists, intermediate results |
-| Long-term | Files / DB / vector store | Save facts, retrieve when relevant ([Module 5](05-rag.md) for retrieval, Module 6 for memory) |
+| Long-term | Files / DB / vector store | Save facts, retrieve when relevant ([Module 5](05-rag.md) for retrieval, [Module 6](06-knowledge-bases.md) for keeping it current, Module 8 for memory) |
 
 Context management rules:
 
@@ -215,12 +215,12 @@ await runAgent("What was my favorite number?", tools, { messages: history });
 
 - The list is **extended in place**, and the system message is added only when the list is empty. After the two calls above it holds `system`, `user`, `assistant` (tool call), `tool`, `assistant`, `user`, `assistant`.
 - The model is stateless: it "remembers" the number only because the earlier messages are sent again. The history grows with every turn, so long conversations need the trimming and summarizing from section 5.
-- Module 6 (memory) builds on this: saving the list to a file and loading it later. In Python the `assistant` entries are SDK objects, so convert them with `msg.model_dump()` before saving them as JSON.
+- Module 8 (memory) builds on this: saving the list to a file and loading it later. In Python the `assistant` entries are SDK objects, so convert them with `msg.model_dump()` before saving them as JSON.
 
 ## 7. Streaming and observability (brief)
 
 - **Streaming** (`stream=True`) shows tokens as they arrive: better UX, same logic.
-- **Log every step** (messages, tool calls, results, latency, tokens). Debugging agents without traces is guesswork (see Module 9). The `LLM_TRACE` option of the examples is the first step; exercise 4 takes it further.
+- **Log every step** (messages, tool calls, results, latency, tokens). Debugging agents without traces is guesswork (see Module 11). The `LLM_TRACE` option of the examples is the first step; exercise 4 takes it further.
 
 ## 8. Key takeaways
 

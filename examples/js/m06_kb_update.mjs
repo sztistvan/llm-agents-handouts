@@ -1,9 +1,9 @@
-// Module 5 lesson: a knowledge base that changes. Incremental sync, versions, deletions, a safe release.
+// Module 6 lesson: a knowledge base that changes. Incremental sync, versions, deletions, a safe release.
 //
 // The lesson copies the Modules 1-4 handouts into a work folder, indexes them, and then changes, adds and deletes
 // documents. Watch how many chunks are embedded each time (that is the cost), what a search finds "as of" an
 // earlier date, and how a bad update is stopped before it goes live. It uses a fake calendar (day 0, day 10, ...)
-// so that its output is the same every run. Needs an embedding model. Run:  node examples/js/m05_kb_update.mjs
+// so that its output is the same every run. Needs an embedding model. Run:  node examples/js/m06_kb_update.mjs
 import { copyFileSync, mkdirSync, readFileSync, readdirSync, rmSync, unlinkSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";

@@ -1,6 +1,6 @@
-"""Knowledge base lifecycle (Module 5, part 2): incremental updates, versions, deletions and safe releases.
+"""Knowledge base lifecycle (Module 6): incremental updates, versions, deletions and safe releases.
 
-Shared building block. Layers: llm_client (embed) -> retrieval (chunks, search) -> kb (lifecycle) -> m05_kb_update.
+Shared building block. Layers: llm_client (embed) -> retrieval (chunks, search) -> kb (lifecycle) -> m06_kb_update.
 
 A knowledge base is a directory with numbered generation files (kb-0001.json, kb-0002.json, ...) and a CURRENT
 file that names the live one. Updates are built in memory, written as a NEW generation, validated, and only then

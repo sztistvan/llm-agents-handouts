@@ -75,12 +75,27 @@ The provider switch works the same way (`$env:LLM_PROVIDER = "lmstudio"` in Powe
 | 2 | Core building blocks | LLM call, prompts, tool calling, structured output, memory and context, the agent loop |
 | 3 | Patterns | ReAct, plan-and-execute, reflection, routing, prompt chaining, parallelization, orchestrator-workers, evaluator-optimizer |
 | 4 | Multi-agent structures | Supervisor, hierarchical, swarm/handoff, debate and critic |
-| 5 | RAG *(in progress)* | Embeddings, chunking, hybrid search, reranking, evaluating recall, agentic RAG, knowledge bases (updates, versions, deletions, safe releases, scale); GraphRAG to come |
-| 6 | Memory *(planned)* | Short-term (trimming, summaries), long-term (remember/recall), knowledge-graph memory; production issues |
-| 7 | Tools & MCP *(planned)* | Scaling tool sets, the Model Context Protocol (a tiny server and client), security |
-| 8 | Frameworks landscape *(planned)* | LangGraph, OpenAI Agents SDK, AutoGen, CrewAI, Semantic Kernel; when to use none |
-| 9 | Best practices *(planned)* | Simplicity, guardrails, evaluation, observability, cost/latency, security (prompt injection), human-in-the-loop |
-| 10 | Capstone examples *(planned)* | Research assistant; coding/file helper |
+| 5 | [RAG](docs/05-rag.md) | Embeddings, chunking, hybrid search, reranking, evaluating recall, agentic RAG |
+| 6 | [Knowledge bases](docs/06-knowledge-bases.md) | Incremental sync, versions, deletions, safe index releases, embedding-model changes, recall at scale, permissions |
+| 7 | GraphRAG *(planned)* | Entities and relations from text, local and global search, multi-hop questions, cost and quality, updates |
+| 8 | Memory *(planned)* | Short-term (trimming, summaries), long-term (remember/recall), knowledge-graph memory; production issues |
+| 9 | Tools & MCP *(planned)* | Scaling tool sets, the Model Context Protocol (a tiny server and client), security |
+| 10 | Frameworks landscape *(planned)* | LangGraph, OpenAI Agents SDK, AutoGen, CrewAI, Semantic Kernel; when to use none |
+| 11 | Best practices *(planned)* | Simplicity, guardrails, evaluation, observability, cost/latency, security (prompt injection), human-in-the-loop |
+| 12 | Capstone examples *(planned)* | Research assistant; coding/file helper |
+
+### How Modules 5 to 7 fit together
+
+Modules 5 to 7 all deal with giving an agent knowledge it was not trained on. They are separate modules because the three topics have different learning goals and different practical problems:
+
+| | **5 RAG** | **6 Knowledge bases** | **7 GraphRAG** |
+|---|---|---|---|
+| **Main question** | How do I find the right text and answer from it? | How do I keep that working as documents change and grow? | What if the answer lives in the relations between documents? |
+| **Learning objectives** | Explain the pipeline. Chunk, embed, and run dense, keyword and hybrid search. Measure recall@k and MRR. Choose naive or agentic RAG. | Design a sync with content hashes. Handle versions and deletion. Release through a validation gate. Plan model changes. Reason about scale and recall. | Explain what a graph adds (multi-hop and "global" questions). Build one from LLM extraction. Run local and global search. Judge when it is worth the cost. |
+| **Practical issues** | Chunking pitfalls, similarity thresholds per model, a small golden set, injection through documents | Hash-based change detection, version policy, purging for compliance, rollback, rebuild cost, recall lost to approximate search, permissions | Extraction cost (one LLM call per chunk) and quality with small models, duplicate entities, provenance back to chunks, community summaries, updates, hard evaluation |
+| **Production checklist focuses on** | Retrieval quality | Operations | Cost and complexity |
+
+Read them in this order: Module 6 builds on the retriever and the golden set of Module 5, and GraphRAG's hardest part, keeping the graph up to date, reuses the sync and provenance ideas of Module 6. You can skip Module 7 without losing the thread.
 
 ## Layout
 
@@ -95,7 +110,7 @@ examples/js/          framework-agnostic JavaScript; same file names (.mjs)
                       kb (a knowledge base that changes: sync, versions, deletions, safe releases)
                       lessons (mNN_ prefix): one runnable example per topic, run from the project root
 examples/rag_golden.json   the golden question set of the retrieval evaluation (Module 5)
-examples/langgraph/   LangGraph examples (planned, Module 8)
+examples/langgraph/   LangGraph examples (planned, Module 10)
 requirements.txt      Python dependencies (JavaScript needs none)
 .env.example          backend settings template: copy to .env
 ```
@@ -109,8 +124,9 @@ requirements.txt      Python dependencies (JavaScript needs none)
 - [x] Module 2: [Core building blocks](docs/02-building-blocks.md)
 - [x] Module 3: [Patterns](docs/03-patterns.md)
 - [x] Module 4: [Multi-agent structures](docs/04-multi-agent.md)
-- [ ] Module 5: [RAG](docs/05-rag.md) (basics and knowledge bases done; GraphRAG to come)
-- [ ] Modules 6-10
+- [x] Module 5: [RAG](docs/05-rag.md)
+- [x] Module 6: [Knowledge bases](docs/06-knowledge-bases.md)
+- [ ] Modules 7-12 (next: GraphRAG)
 
 ## Further reading and link check
 

@@ -342,6 +342,6 @@ The same works for the JavaScript examples, for instance `node examples/js/m01_m
 - Chip Huyen, [*Agents*](https://huyenchip.com/2025/01/07/agents.html) (2025): tools, planning and failure modes
 - Wang et al., [*A Survey on Large Language Model based Autonomous Agents*](https://arxiv.org/abs/2308.11432) (2023): for a wider map of the field
 - Russell & Norvig, [*Artificial Intelligence: A Modern Approach*](https://aima.cs.berkeley.edu/) (4th ed., 2020): the classic definition of an agent
-- [Model Context Protocol](https://modelcontextprotocol.io/): the standard for sharing tools with agents (Module 7)
+- [Model Context Protocol](https://modelcontextprotocol.io/): the standard for sharing tools with agents (Module 9)
 
 **Next:** [Module 2: Core building blocks](02-building-blocks.md)

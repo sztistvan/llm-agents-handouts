@@ -1,4 +1,4 @@
-// Module 5 lesson: what happens when the knowledge base grows. Exact search vs approximate search.
+// Module 6 lesson: what happens when the knowledge base grows. Exact search vs approximate search.
 //
 // Brute force compares the query with EVERY vector: exact, but the time grows with the size of the corpus.
 // Approximate search looks at only a part of the vectors and is much faster, but it can miss a true neighbour.
@@ -6,7 +6,7 @@
 // index: k-means groups the vectors into lists, and a query scans only the `nprobe` closest lists.
 // Real systems use optimized libraries (FAISS, HNSW in a vector database); the trade-off is the same.
 // Your own embeddings will give different numbers: measure recall on YOUR data. Run:
-//     node examples/js/m05_kb_scale.mjs
+//     node examples/js/m06_kb_scale.mjs
 import { pathToFileURL } from "node:url";
 
 const DIM = 64, CLUSTERS = 40, SIGMA = 0.08, QUERIES = 20, K = 10;

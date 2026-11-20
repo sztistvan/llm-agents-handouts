@@ -1,4 +1,4 @@
-"""Module 5 lesson: what happens when the knowledge base grows. Exact search vs approximate search.
+"""Module 6 lesson: what happens when the knowledge base grows. Exact search vs approximate search.
 
 Brute force compares the query with EVERY vector: exact, but the time grows with the size of the corpus.
 Approximate search looks at only a part of the vectors and is much faster, but it can miss a true neighbour.
@@ -6,7 +6,7 @@ This lesson measures that trade-off on SYNTHETIC vectors (random clusters, no mo
 index: k-means groups the vectors into lists, and a query scans only the `nprobe` closest lists.
 Real systems use optimized libraries (FAISS, HNSW in a vector database); the trade-off is the same.
 Your own embeddings will give different numbers: measure recall on YOUR data. Run:
-    python examples/python/m05_kb_scale.py
+    python examples/python/m06_kb_scale.py
 """
 import heapq
 import math
