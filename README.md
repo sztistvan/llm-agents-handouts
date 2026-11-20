@@ -80,7 +80,7 @@ The provider switch works the same way (`$env:LLM_PROVIDER = "lmstudio"` in Powe
 | 7 | [GraphRAG](docs/07-graphrag.md) | Knowledge graph vs taxonomy vs ontology, entities and relations from text, entity resolution, local and global search, an honest comparison with plain RAG, updates, graph databases (Neo4j, FalkorDB, Memgraph, PostgreSQL) |
 | 8 | [Graph databases](docs/08-graph-databases.md) | Where the graph lives in production: what a store must do, property graph vs RDF, Cypher/GQL, Neo4j vs FalkorDB vs Memgraph vs PostgreSQL, how to choose and migrate |
 | 9 | [Memory](docs/09-memory.md) | Short-term (trim, summarize, persist), long-term (remember/recall/forget, reconcile on write, automatic extraction), facts with history, production issues (privacy, isolation, poisoning) |
-| 10 | Tools & MCP *(planned)* | Scaling tool sets, the Model Context Protocol (a tiny server and client), security |
+| 10 | [Tools & MCP](docs/10-tools-mcp.md) | Designing tools, many tools (cost, shortlists, overlapping tools), the Model Context Protocol (a tiny server and client by hand), tool poisoning and defences |
 | 11 | Frameworks landscape *(planned)* | LangGraph, OpenAI Agents SDK, AutoGen, CrewAI, Semantic Kernel; when to use none |
 | 12 | Best practices *(planned)* | Simplicity, guardrails, evaluation, observability, cost/latency, security (prompt injection), human-in-the-loop |
 | 13 | Capstone examples *(planned)* | Research assistant; coding/file helper |
@@ -110,10 +110,12 @@ examples/js/          framework-agnostic JavaScript; same file names (.mjs)
                       retrieval (chunking, vector store, BM25, hybrid search), rag (cited answers, reranking),
                       kb (a knowledge base that changes: sync, versions, deletions, safe releases),
                       graph_store (knowledge graph: LLM extraction with provenance, local and global search),
-                      memory (short-term trim/summarize, long-term memory store, facts with history)
+                      memory (short-term trim/summarize, long-term memory store, facts with history),
+                      mcp_client (a minimal MCP client: start a server, list and call its tools as Tool objects)
                       lessons (mNN_ prefix): one runnable example per topic, run from the project root
 examples/rag_golden.json   the golden question set of the retrieval evaluation (Module 5)
 examples/graph_golden.json multi-hop questions for the GraphRAG comparison (Module 7)
+examples/tools_catalog.json 36 office tools and 12 questions for the tool-selection experiment (Module 10)
 examples/ontology.json     a small ontology for the handouts: classes, taxonomy, relations with domain and range (Module 7)
 examples/langgraph/   LangGraph examples (planned, Module 11)
 requirements.txt      Python dependencies (JavaScript needs none)
@@ -134,7 +136,8 @@ requirements.txt      Python dependencies (JavaScript needs none)
 - [x] Module 7: [GraphRAG](docs/07-graphrag.md)
 - [x] Module 8: [Graph databases](docs/08-graph-databases.md)
 - [x] Module 9: [Memory](docs/09-memory.md)
-- [ ] Modules 10-13 (next: Tools & MCP)
+- [x] Module 10: [Tools & MCP](docs/10-tools-mcp.md)
+- [ ] Modules 11-13 (next: Frameworks landscape)
 
 ## Further reading and link check
 

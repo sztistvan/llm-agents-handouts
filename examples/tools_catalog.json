@@ -1,0 +1,737 @@
+{
+ "tools": [
+  {
+   "name": "list_events",
+   "description": "List the calendar events of the user between two dates.",
+   "parameters": {
+    "type": "object",
+    "properties": {
+     "date_from": {
+      "type": "string",
+      "description": "First day, YYYY-MM-DD"
+     },
+     "date_to": {
+      "type": "string",
+      "description": "Last day, YYYY-MM-DD"
+     }
+    },
+    "required": [
+     "date_from",
+     "date_to"
+    ]
+   }
+  },
+  {
+   "name": "create_event",
+   "description": "Create a calendar event and invite attendees.",
+   "parameters": {
+    "type": "object",
+    "properties": {
+     "title": {
+      "type": "string",
+      "description": "Title of the event"
+     },
+     "start": {
+      "type": "string",
+      "description": "Start, ISO 8601"
+     },
+     "end": {
+      "type": "string",
+      "description": "End, ISO 8601"
+     },
+     "attendees": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "description": "E-mail addresses or names to invite"
+     }
+    },
+    "required": [
+     "title",
+     "start",
+     "end"
+    ]
+   }
+  },
+  {
+   "name": "cancel_event",
+   "description": "Cancel a calendar event by its id and notify the attendees.",
+   "parameters": {
+    "type": "object",
+    "properties": {
+     "event_id": {
+      "type": "string",
+      "description": "Id of the event"
+     }
+    },
+    "required": [
+     "event_id"
+    ]
+   }
+  },
+  {
+   "name": "find_free_slot",
+   "description": "Find a time when all given people are free for a meeting of a given length.",
+   "parameters": {
+    "type": "object",
+    "properties": {
+     "duration_minutes": {
+      "type": "integer",
+      "description": "Length of the meeting"
+     },
+     "attendees": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "description": "People who must be free"
+     }
+    },
+    "required": [
+     "duration_minutes",
+     "attendees"
+    ]
+   }
+  },
+  {
+   "name": "search_email",
+   "description": "Search the mailbox of the user for messages that match a query.",
+   "parameters": {
+    "type": "object",
+    "properties": {
+     "query": {
+      "type": "string",
+      "description": "Words to look for in sender, subject or body"
+     }
+    },
+    "required": [
+     "query"
+    ]
+   }
+  },
+  {
+   "name": "send_email",
+   "description": "Send a new e-mail.",
+   "parameters": {
+    "type": "object",
+    "properties": {
+     "to": {
+      "type": "string",
+      "description": "Recipient"
+     },
+     "subject": {
+      "type": "string",
+      "description": "Subject line"
+     },
+     "body": {
+      "type": "string",
+      "description": "Message text"
+     }
+    },
+    "required": [
+     "to",
+     "subject",
+     "body"
+    ]
+   }
+  },
+  {
+   "name": "reply_to_email",
+   "description": "Reply to an existing e-mail by its id.",
+   "parameters": {
+    "type": "object",
+    "properties": {
+     "email_id": {
+      "type": "string",
+      "description": "Id of the message"
+     },
+     "body": {
+      "type": "string",
+      "description": "Reply text"
+     }
+    },
+    "required": [
+     "email_id",
+     "body"
+    ]
+   }
+  },
+  {
+   "name": "list_unread_emails",
+   "description": "List the unread e-mails in the inbox.",
+   "parameters": {
+    "type": "object",
+    "properties": {},
+    "required": []
+   }
+  },
+  {
+   "name": "archive_email",
+   "description": "Move an e-mail out of the inbox into the archive.",
+   "parameters": {
+    "type": "object",
+    "properties": {
+     "email_id": {
+      "type": "string",
+      "description": "Id of the message"
+     }
+    },
+    "required": [
+     "email_id"
+    ]
+   }
+  },
+  {
+   "name": "search_files",
+   "description": "Search the names of files in the shared drive.",
+   "parameters": {
+    "type": "object",
+    "properties": {
+     "query": {
+      "type": "string",
+      "description": "Part of the file name"
+     }
+    },
+    "required": [
+     "query"
+    ]
+   }
+  },
+  {
+   "name": "read_file",
+   "description": "Read the content of a file in the shared drive.",
+   "parameters": {
+    "type": "object",
+    "properties": {
+     "path": {
+      "type": "string",
+      "description": "Path of the file"
+     }
+    },
+    "required": [
+     "path"
+    ]
+   }
+  },
+  {
+   "name": "write_file",
+   "description": "Create or overwrite a file in the shared drive.",
+   "parameters": {
+    "type": "object",
+    "properties": {
+     "path": {
+      "type": "string",
+      "description": "Path of the file"
+     },
+     "content": {
+      "type": "string",
+      "description": "New content"
+     }
+    },
+    "required": [
+     "path",
+     "content"
+    ]
+   }
+  },
+  {
+   "name": "list_folder",
+   "description": "List the files and sub-folders of a folder in the shared drive.",
+   "parameters": {
+    "type": "object",
+    "properties": {
+     "path": {
+      "type": "string",
+      "description": "Path of the folder"
+     }
+    },
+    "required": [
+     "path"
+    ]
+   }
+  },
+  {
+   "name": "delete_file",
+   "description": "Delete a file from the shared drive.",
+   "parameters": {
+    "type": "object",
+    "properties": {
+     "path": {
+      "type": "string",
+      "description": "Path of the file"
+     }
+    },
+    "required": [
+     "path"
+    ]
+   }
+  },
+  {
+   "name": "search_documents",
+   "description": "Full-text search in the company wiki and policy documents.",
+   "parameters": {
+    "type": "object",
+    "properties": {
+     "query": {
+      "type": "string",
+      "description": "What to look for"
+     }
+    },
+    "required": [
+     "query"
+    ]
+   }
+  },
+  {
+   "name": "summarize_document",
+   "description": "Summarize a wiki document by its id.",
+   "parameters": {
+    "type": "object",
+    "properties": {
+     "doc_id": {
+      "type": "string",
+      "description": "Id of the document"
+     }
+    },
+    "required": [
+     "doc_id"
+    ]
+   }
+  },
+  {
+   "name": "create_task",
+   "description": "Add a task to the to-do list of the user.",
+   "parameters": {
+    "type": "object",
+    "properties": {
+     "title": {
+      "type": "string",
+      "description": "What has to be done"
+     },
+     "due": {
+      "type": "string",
+      "description": "Due date, YYYY-MM-DD"
+     }
+    },
+    "required": [
+     "title"
+    ]
+   }
+  },
+  {
+   "name": "list_tasks",
+   "description": "List the tasks of the user, filtered by status.",
+   "parameters": {
+    "type": "object",
+    "properties": {
+     "status": {
+      "type": "string",
+      "description": "open or done"
+     }
+    },
+    "required": []
+   }
+  },
+  {
+   "name": "complete_task",
+   "description": "Mark a task as done.",
+   "parameters": {
+    "type": "object",
+    "properties": {
+     "task_id": {
+      "type": "string",
+      "description": "Id of the task"
+     }
+    },
+    "required": [
+     "task_id"
+    ]
+   }
+  },
+  {
+   "name": "assign_task",
+   "description": "Assign a task to another person.",
+   "parameters": {
+    "type": "object",
+    "properties": {
+     "task_id": {
+      "type": "string",
+      "description": "Id of the task"
+     },
+     "user": {
+      "type": "string",
+      "description": "Who gets it"
+     }
+    },
+    "required": [
+     "task_id",
+     "user"
+    ]
+   }
+  },
+  {
+   "name": "create_reminder",
+   "description": "Set a reminder that notifies the user at a given time.",
+   "parameters": {
+    "type": "object",
+    "properties": {
+     "text": {
+      "type": "string",
+      "description": "What to be reminded of"
+     },
+     "when": {
+      "type": "string",
+      "description": "When, ISO 8601"
+     }
+    },
+    "required": [
+     "text",
+     "when"
+    ]
+   }
+  },
+  {
+   "name": "get_weather",
+   "description": "Get the weather forecast for a city on a date.",
+   "parameters": {
+    "type": "object",
+    "properties": {
+     "city": {
+      "type": "string",
+      "description": "City name"
+     },
+     "date": {
+      "type": "string",
+      "description": "YYYY-MM-DD"
+     }
+    },
+    "required": [
+     "city"
+    ]
+   }
+  },
+  {
+   "name": "search_flights",
+   "description": "Search flights between two airports on a date.",
+   "parameters": {
+    "type": "object",
+    "properties": {
+     "origin": {
+      "type": "string",
+      "description": "Departure airport"
+     },
+     "destination": {
+      "type": "string",
+      "description": "Arrival airport"
+     },
+     "date": {
+      "type": "string",
+      "description": "YYYY-MM-DD"
+     }
+    },
+    "required": [
+     "origin",
+     "destination",
+     "date"
+    ]
+   }
+  },
+  {
+   "name": "book_flight",
+   "description": "Book a flight by its id with the stored payment method.",
+   "parameters": {
+    "type": "object",
+    "properties": {
+     "flight_id": {
+      "type": "string",
+      "description": "Id from search_flights"
+     }
+    },
+    "required": [
+     "flight_id"
+    ]
+   }
+  },
+  {
+   "name": "convert_currency",
+   "description": "Convert an amount of money from one currency to another at today's rate.",
+   "parameters": {
+    "type": "object",
+    "properties": {
+     "amount": {
+      "type": "number",
+      "description": "Amount"
+     },
+     "from_currency": {
+      "type": "string",
+      "description": "ISO code, for example USD"
+     },
+     "to_currency": {
+      "type": "string",
+      "description": "ISO code, for example EUR"
+     }
+    },
+    "required": [
+     "amount",
+     "from_currency",
+     "to_currency"
+    ]
+   }
+  },
+  {
+   "name": "calculate",
+   "description": "Evaluate an arithmetic expression.",
+   "parameters": {
+    "type": "object",
+    "properties": {
+     "expression": {
+      "type": "string",
+      "description": "For example 12 * (3 + 4)"
+     }
+    },
+    "required": [
+     "expression"
+    ]
+   }
+  },
+  {
+   "name": "run_sql",
+   "description": "Run a read-only SQL query on the analytics database.",
+   "parameters": {
+    "type": "object",
+    "properties": {
+     "query": {
+      "type": "string",
+      "description": "SQL SELECT statement"
+     }
+    },
+    "required": [
+     "query"
+    ]
+   }
+  },
+  {
+   "name": "plot_chart",
+   "description": "Draw a chart from a table of numbers.",
+   "parameters": {
+    "type": "object",
+    "properties": {
+     "data": {
+      "type": "string",
+      "description": "CSV text"
+     },
+     "kind": {
+      "type": "string",
+      "description": "bar, line or pie"
+     }
+    },
+    "required": [
+     "data"
+    ]
+   }
+  },
+  {
+   "name": "find_customer",
+   "description": "Look up a customer in the CRM by name and return the customer id.",
+   "parameters": {
+    "type": "object",
+    "properties": {
+     "name": {
+      "type": "string",
+      "description": "Customer or company name"
+     }
+    },
+    "required": [
+     "name"
+    ]
+   }
+  },
+  {
+   "name": "get_customer_orders",
+   "description": "List the orders of a customer by customer id.",
+   "parameters": {
+    "type": "object",
+    "properties": {
+     "customer_id": {
+      "type": "string",
+      "description": "Id from find_customer"
+     }
+    },
+    "required": [
+     "customer_id"
+    ]
+   }
+  },
+  {
+   "name": "update_customer_address",
+   "description": "Change the billing address of a customer.",
+   "parameters": {
+    "type": "object",
+    "properties": {
+     "customer_id": {
+      "type": "string",
+      "description": "Customer id"
+     },
+     "address": {
+      "type": "string",
+      "description": "New address"
+     }
+    },
+    "required": [
+     "customer_id",
+     "address"
+    ]
+   }
+  },
+  {
+   "name": "create_invoice",
+   "description": "Create and send an invoice to a customer.",
+   "parameters": {
+    "type": "object",
+    "properties": {
+     "customer_id": {
+      "type": "string",
+      "description": "Customer id"
+     },
+     "amount": {
+      "type": "number",
+      "description": "Amount in EUR"
+     }
+    },
+    "required": [
+     "customer_id",
+     "amount"
+    ]
+   }
+  },
+  {
+   "name": "get_expense_report",
+   "description": "Get the expense report of the user for a month.",
+   "parameters": {
+    "type": "object",
+    "properties": {
+     "month": {
+      "type": "string",
+      "description": "YYYY-MM"
+     }
+    },
+    "required": [
+     "month"
+    ]
+   }
+  },
+  {
+   "name": "submit_expense",
+   "description": "Submit an expense for reimbursement.",
+   "parameters": {
+    "type": "object",
+    "properties": {
+     "amount": {
+      "type": "number",
+      "description": "Amount"
+     },
+     "category": {
+      "type": "string",
+      "description": "Category"
+     },
+     "description": {
+      "type": "string",
+      "description": "What it was for"
+     }
+    },
+    "required": [
+     "amount",
+     "category"
+    ]
+   }
+  },
+  {
+   "name": "translate_text",
+   "description": "Translate a text into another language.",
+   "parameters": {
+    "type": "object",
+    "properties": {
+     "text": {
+      "type": "string",
+      "description": "Text to translate"
+     },
+     "language": {
+      "type": "string",
+      "description": "Target language"
+     }
+    },
+    "required": [
+     "text",
+     "language"
+    ]
+   }
+  },
+  {
+   "name": "get_stock_price",
+   "description": "Get the latest price of a stock by its ticker symbol.",
+   "parameters": {
+    "type": "object",
+    "properties": {
+     "symbol": {
+      "type": "string",
+      "description": "Ticker, for example MSFT"
+     }
+    },
+    "required": [
+     "symbol"
+    ]
+   }
+  }
+ ],
+ "questions": [
+  {
+   "question": "What meetings do I have next Tuesday?",
+   "expected": "list_events"
+  },
+  {
+   "question": "Schedule a 30 minute sync with Maria on Friday at 10:00.",
+   "expected": "create_event"
+  },
+  {
+   "question": "Find me a time when Tom and I are both free for one hour.",
+   "expected": "find_free_slot"
+  },
+  {
+   "question": "Did the supplier write back about the contract?",
+   "expected": "search_email"
+  },
+  {
+   "question": "Tell Anna that the report is finished.",
+   "expected": "send_email"
+  },
+  {
+   "question": "What does the handbook say about parental leave?",
+   "expected": "search_documents"
+  },
+  {
+   "question": "Is there a file called budget_2025.xlsx in the shared drive?",
+   "expected": "search_files"
+  },
+  {
+   "question": "Remind me tomorrow morning to call the dentist.",
+   "expected": "create_reminder"
+  },
+  {
+   "question": "Add 'review pull requests' to my to-do list for Thursday.",
+   "expected": "create_task"
+  },
+  {
+   "question": "What is 18% of 2450?",
+   "expected": "calculate"
+  },
+  {
+   "question": "How much is 250 US dollars in euros?",
+   "expected": "convert_currency"
+  },
+  {
+   "question": "What orders has Acme Corp placed?",
+   "expected": "find_customer"
+  }
+ ]
+}
