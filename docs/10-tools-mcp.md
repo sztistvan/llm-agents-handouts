@@ -7,7 +7,7 @@ Until now every tool was a Python or JavaScript function in the same file as the
 
 ## Setup
 
-Run from the project root. `m10_many_tools` needs the embedding model of Module 5; the others need only the chat model. You never start the server yourself: the client starts it as a subprocess (but you may, see section 3).
+To use MCP servers in the applications you work with, see [Module 10a](10a-mcp-in-practice.md). Run from the project root. `m10_many_tools` needs the embedding model of Module 5; the others need only the chat model. You never start the server yourself: the client starts it as a subprocess (but you may, see section 3).
 
 | Lesson | Python | JavaScript | LLM calls |
 |---|---|---|---|
@@ -249,4 +249,4 @@ More threats belong to remote servers and to installing servers, and the MCP pro
 - Tool design: Anthropic, [*Writing effective tools for agents*](https://www.anthropic.com/engineering/writing-tools-for-agents); OpenAI, [*Function calling*](https://platform.openai.com/docs/guides/function-calling)
 - Security: the MCP [security best practices](https://modelcontextprotocol.io/docs/2026-07-28/tutorials/security/security_best_practices); Simon Willison, [*The lethal trifecta for AI agents*](https://simonwillison.net/2025/Jun/16/the-lethal-trifecta/) (2025)
 
-**Next:** Module 11: Frameworks landscape (coming next)
+**Next:** [Module 10a: MCP in practice](10a-mcp-in-practice.md) (Claude Desktop, GitHub Copilot, VS Code), then Module 11: Frameworks landscape (coming next)

@@ -81,6 +81,7 @@ The provider switch works the same way (`$env:LLM_PROVIDER = "lmstudio"` in Powe
 | 8 | [Graph databases](docs/08-graph-databases.md) | Where the graph lives in production: what a store must do, property graph vs RDF, Cypher/GQL, Neo4j vs FalkorDB vs Memgraph vs PostgreSQL, how to choose and migrate |
 | 9 | [Memory](docs/09-memory.md) | Short-term (trim, summarize, persist), long-term (remember/recall/forget, reconcile on write, automatic extraction), facts with history, production issues (privacy, isolation, poisoning) |
 | 10 | [Tools & MCP](docs/10-tools-mcp.md) | Designing tools, many tools (cost, shortlists, overlapping tools), the Model Context Protocol (a tiny server and client by hand), tool poisoning and defences |
+| 10a | [MCP in practice](docs/10a-mcp-in-practice.md) | Adding, checking and reviewing MCP servers in Claude Desktop, the GitHub Copilot app and VS Code; useful servers (GitHub, Context7, Microsoft Learn, Playwright); using them safely |
 | 11 | Frameworks landscape *(planned)* | LangGraph, OpenAI Agents SDK, AutoGen, CrewAI, Semantic Kernel; when to use none |
 | 12 | Best practices *(planned)* | Simplicity, guardrails, evaluation, observability, cost/latency, security (prompt injection), human-in-the-loop |
 | 13 | Capstone examples *(planned)* | Research assistant; coding/file helper |
@@ -137,6 +138,7 @@ requirements.txt      Python dependencies (JavaScript needs none)
 - [x] Module 8: [Graph databases](docs/08-graph-databases.md)
 - [x] Module 9: [Memory](docs/09-memory.md)
 - [x] Module 10: [Tools & MCP](docs/10-tools-mcp.md)
+- [x] Module 10a: [MCP in practice](docs/10a-mcp-in-practice.md)
 - [ ] Modules 11-13 (next: Frameworks landscape)
 
 ## Further reading and link check
